@@ -249,7 +249,11 @@ const GOOD_TYPES = new Set(['album','ep']);
 async function apiFetch(url, logLabel) {
   log(`[${logLabel}] GET ${url}`, 'dim');
   const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (!resp.ok) {
+    let detail = "";
+    try { const j = await resp.json(); detail = " — " + JSON.stringify(j); } catch {}
+    throw new Error(`HTTP ${resp.status}` + detail);
+  }
   return resp.json();
 }
 
