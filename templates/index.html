@@ -190,7 +190,7 @@
   }
   .cov {
     position: relative; z-index: 1;
-    width: 180px; height: 180px; flex-shrink: 0;
+    width: 200px; height: 200px; flex-shrink: 0;
     box-shadow: 0 8px 40px rgba(0,0,0,0.7);
     background: var(--surface); overflow: hidden;
     display: flex; align-items: center; justify-content: center;
@@ -722,15 +722,29 @@
     box-shadow: 0 -4px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,80,0.15);
   }
 
-  /* Favorite star on card */
+  /* Favorite button — physical stamped brass button */
   .fav-btn {
-    position: absolute; top: 12px; right: 12px; z-index: 2;
-    background: none; border: none; cursor: pointer; font-size: 1.1rem;
-    color: rgba(200,160,64,0.3); transition: color 0.15s, transform 0.15s;
-    line-height: 1;
+    cursor: pointer; font-size: 0.6rem; letter-spacing: 0.12em;
+    text-transform: uppercase; font-family: inherit;
+    padding: 6px 16px; display: inline-flex; align-items: center; gap: 7px;
+    color: #7a6030;
+    background: linear-gradient(to bottom, #2a2010 0%, #1a1408 100%);
+    border: 1px solid #4a3818;
+    border-bottom: 2px solid #0a0804;
+    border-radius: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,80,0.06);
+    transition: all 0.1s;
+    position: relative; z-index: 1;
+    margin-top: 12px;
   }
-  .fav-btn:hover { color: rgba(200,160,64,0.8); transform: scale(1.2); }
-  .fav-btn.active { color: #c8a040; }
+  .fav-btn:hover { color: #c8a040; border-color: #7a5820; background: linear-gradient(to bottom, #382e18 0%, #241a0c 100%); }
+  .fav-btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  .fav-btn.active {
+    color: #c8a040;
+    background: linear-gradient(to bottom, #2e2010 0%, #1e1408 100%);
+    border-color: #7a5820;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5), 0 0 8px rgba(200,160,64,0.15), inset 0 1px 0 rgba(255,200,80,0.1);
+  }
 
   /* Export button */
   .export-btn {
@@ -1105,7 +1119,6 @@
       <div class="card" id="card">
         <div class="cbg">
           <div class="cbg-wash" id="cbg-wash"></div>
-          <button class="fav-btn" id="favbtn" onclick="toggleFav()" title="Favorite">☆</button>
           <div class="cbg-vignette"></div>
           <div class="cov" id="cov"><div class="cnone">no art</div></div>
           <div class="cmeta">
@@ -1130,6 +1143,7 @@
             </div>
           </div>
           <div class="lrow" id="lrow"></div>
+          <button class="fav-btn" id="favbtn" onclick="toggleFav()"><span id="favstar">☆</span> Add to Favorites</button>
           <button class="sim-btn" id="simbtn" onclick="spinSimilar()">Similar ↻</button>
           <div class="note" id="note" style="display:none"></div>
         </div>
@@ -1540,7 +1554,10 @@ function render(r) {
   const grow = document.getElementById('grow');
   const tags = (r.tags||[]).slice(0, 12);
   if (tags.length) {
-    grow.innerHTML = tags.map((t,i) => `<span class="gt${i===0?' p':''}">${esc(t)}</span>`).join('');
+    grow.innerHTML = tags.map((t,i) => {
+      const col = i === 0 ? 'gt p' : ('gt gt-' + tagColor(t));
+      return `<span class="${col}">${esc(t)}</span>`;
+    }).join('');
     gsec.style.display = 'block';
   } else { gsec.style.display = 'none'; }
 
@@ -1787,10 +1804,12 @@ function toggleFav() {
   const btn = document.getElementById('favbtn');
   if (idx >= 0) {
     favorites.splice(idx, 1);
-    btn.textContent = '☆'; btn.classList.remove('active');
+    btn.innerHTML = '<span>☆</span> Add to Favorites';
+    btn.classList.remove('active');
   } else {
     favorites.unshift({ ...lastResult, _ts: Date.now() });
-    btn.textContent = '★'; btn.classList.add('active');
+    btn.innerHTML = '<span>★</span> Favorited';
+    btn.classList.add('active');
   }
   localStorage.setItem('bs_favs', JSON.stringify(favorites));
   if (trayOpen && trayTab === 'favs') renderTray();
@@ -1801,7 +1820,7 @@ function updateFavBtn() {
   const id = lastResult.url || (lastResult.mbid) || (lastResult.artist + lastResult.title);
   const isFav = favorites.some(f => (f.url || f.artist + f.title) === id);
   const btn = document.getElementById('favbtn');
-  btn.textContent = isFav ? '★' : '☆';
+  btn.innerHTML = isFav ? '<span>★</span> Favorited' : '<span>☆</span> Add to Favorites';
   btn.classList.toggle('active', isFav);
 }
 
