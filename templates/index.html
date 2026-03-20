@@ -611,12 +611,12 @@ function render(r) {
   const pills = document.getElementById('cpills');
   pills.innerHTML = '';
   if (r.year)    pills.innerHTML += pill(r.year);
-  if (r.type)    pills.innerHTML += pill(r.type, 'hi');
+  if (r.type && r.source !== 'archive') pills.innerHTML += pill(r.type, 'hi');
   if (r.source === 'discogs') {
     if (r.genre)    pills.innerHTML += pill(r.genre);
     if (r.country)  pills.innerHTML += pill(r.country);
   } else if (r.source === 'archive') {
-    if (r.collection) pills.innerHTML += pill(r.collection);
+    if (r.collection) pills.innerHTML += pill(r.collection.replace(/_/g, ' '));
   } else {
     if (r.country) pills.innerHTML += pill(r.country);
     for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);

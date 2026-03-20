@@ -311,6 +311,15 @@ def ia_random():
     if not docs:
         return jsonify({"error": "all filtered", "collection": collection}), 404
 
+    # Filter out items with placeholder/unreadable metadata
+    JUNK_TITLES = {"none legible", "unknown", "untitled", "", "n/a", "na"}
+    docs = [d for d in docs if
+        str(d.get("title", "")).strip().lower() not in JUNK_TITLES and
+        str(d.get("title", "")).strip() != ""
+    ]
+    if not docs:
+        return jsonify({"error": "all junk metadata", "collection": collection}), 404
+
     item = random.choice(docs)
     identifier = item.get("identifier", "")
 
