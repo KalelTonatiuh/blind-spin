@@ -509,7 +509,6 @@
       ),
       linear-gradient(to bottom, #2e2010, #1a1208);
     position: sticky; top: 0; z-index: 10;
-    filter: url(#wood-grain-dark);
     box-shadow: 0 2px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.07);
   }
   .store-title {
@@ -547,16 +546,18 @@
   /* The actual wooden shelf surface */
   .shelf-surface {
     position: relative;
-    /* Warm amber-brown polished wood base */
-    background: linear-gradient(to bottom,
-      #6b4a20 0%, #7a5428 8%, #5a3c14 20%,
-      #6e4e22 35%, #4e3210 50%,
-      #5c4018 65%, #6a4a20 80%, #4a3010 100%);
+    /* Warm amber-brown polished wood with CSS grain */
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='60'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012 0.45' numOctaves='4' seed='8'/%3E%3CfeColorMatrix type='matrix' values='0.3 0 0 0 0.18 0.15 0 0 0 0.08 0.05 0 0 0 0.02 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='400' height='60' filter='url(%23w)'/%3E%3C/svg%3E"),
+      linear-gradient(to bottom,
+        #6b4a20 0%, #7a5428 8%, #5a3c14 20%,
+        #6e4e22 35%, #4e3210 50%,
+        #5c4018 65%, #6a4a20 80%, #4a3010 100%);
+    background-blend-mode: multiply, normal;
     border-top: 4px solid #9a7038;
     border-bottom: 6px solid #1a0e04;
     padding: 16px 28px 20px;
     /* SVG wood grain filter */
-    filter: url(#wood-grain);
     box-shadow:
       inset 0 3px 0 rgba(255,220,120,0.25),
       inset 0 1px 0 rgba(255,255,200,0.1),
@@ -786,6 +787,7 @@
     bottom: calc(100% + 10px);
     left: 50%;
     z-index: 9999;
+    /* #store-popover overrides with position:fixed via inline style */
     width: 220px;
     background: linear-gradient(to bottom, #241c0e, #161008);
     border: 1px solid #5a4020;
@@ -1213,32 +1215,6 @@
 
 
   <!-- ── RECORD STORE OVERLAY ── -->
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <filter id="wood-grain" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-        <feTurbulence type="turbulence" baseFrequency="0.015 0.35" numOctaves="4" seed="8" result="noise"/>
-        <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
-        <feColorMatrix type="matrix" result="wood-color"
-          values="0.6 0 0 0 0.22
-                  0.3 0 0 0 0.12
-                  0.1 0 0 0 0.04
-                  0   0 0 1 0"/>
-        <feBlend in="SourceGraphic" in2="wood-color" mode="multiply" result="blended"/>
-        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
-      </filter>
-      <filter id="wood-grain-dark" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-        <feTurbulence type="turbulence" baseFrequency="0.012 0.4" numOctaves="5" seed="12" result="noise"/>
-        <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
-        <feColorMatrix type="matrix" result="wood-color"
-          values="0.5 0 0 0 0.18
-                  0.25 0 0 0 0.09
-                  0.08 0 0 0 0.02
-                  0    0 0 1 0"/>
-        <feBlend in="SourceGraphic" in2="wood-color" mode="multiply" result="blended"/>
-        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
-      </filter>
-    </defs>
-  </svg>
   <div class="store-overlay" id="store-overlay">
     <div class="store-hdr">
       <div class="store-title">Record Store</div>
@@ -1264,10 +1240,11 @@ function log(msg, t='ok') {
 }
 function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
 
-// ── GLOBAL CLICK — close popovers when clicking outside sleeves ──────────────
+// ── GLOBAL CLICK — close store popover when clicking outside sleeves ──────────
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.sleeve')) {
-    document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
+  if (!e.target.closest('.sleeve') && !e.target.closest('#store-popover')) {
+    const sp = document.getElementById('store-popover');
+    if (sp) sp.classList.remove('vis');
   }
 });
 
@@ -2008,6 +1985,8 @@ function toggleStore() {
   const overlay = document.getElementById('store-overlay');
   storeOpen = !storeOpen;
   overlay.classList.toggle('open', storeOpen);
+  const sp = document.getElementById('store-popover');
+  if (sp) sp.classList.remove('vis');
   document.getElementById('storebtn').classList.toggle('on', storeOpen);
   const storeBody = document.getElementById('store-body');
   if (storeOpen && (!storeLoaded || !storeBody.children.length)) loadStore();
@@ -2102,28 +2081,48 @@ function makeSleeve(r) {
         <div class="sleeve-title">${esc(r.title)}</div>
         <div class="sleeve-year">${esc(r.year || '')} ${esc(r.country || '')}</div>
       </div>
-    </div>
-    <div class="sleeve-popover">
+    </div>`;
+
+  div.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Get or create the store-level popover
+    let pop = document.getElementById('store-popover');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'store-popover';
+      pop.className = 'sleeve-popover';
+      pop.style.position = 'fixed';
+      pop.style.zIndex = '2000';
+      document.body.appendChild(pop);
+    }
+    // If clicking the same sleeve, toggle off
+    if (pop.classList.contains('vis') && pop._sleeve === div) {
+      pop.classList.remove('vis');
+      return;
+    }
+    pop._sleeve = div;
+    pop.innerHTML = `
       <div class="sp-artist">${esc(r.artist)}</div>
       <div class="sp-title">${esc(r.title)}</div>
       <div class="sp-meta">${esc(r.year||'')}${r.country?' · '+esc(r.country):''}${r.genre?' · '+esc(r.genre):''}</div>
       ${tagsHtml}
-      <button class="sleeve-open-btn">Open full record ↗</button>
-    </div>`;
-
-  div.addEventListener('click', (e) => {
-    if (e.target.closest('.sleeve-open-btn')) {
+      <button class="sleeve-open-btn">Open full record ↗</button>`;
+    pop.querySelector('.sleeve-open-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      pop.classList.remove('vis');
       toggleStore();
       openStoreRelease(r);
-      return;
-    }
-    e.stopPropagation();
-    // Close all other open popovers
-    document.querySelectorAll('.sleeve-popover.vis').forEach(p => {
-      if (p.closest('.sleeve') !== div) p.classList.remove('vis');
     });
-    const pop = div.querySelector('.sleeve-popover');
-    if (pop) pop.classList.toggle('vis');
+    // Position above sleeve using fixed coords
+    const rect = div.getBoundingClientRect();
+    const pw = 220, ph = 180;
+    let left = rect.left + rect.width / 2 - pw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    let top = rect.top - ph - 12;
+    if (top < 8) top = rect.bottom + 12;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.classList.add('vis');
   });
 
   sleeveObserver.observe(div);
@@ -2168,8 +2167,8 @@ async function openStoreRelease(r) {
 const sleeveObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) {
-      const pop = entry.target.querySelector('.sleeve-popover');
-      if (pop) pop.classList.remove('vis');
+      const sp = document.getElementById('store-popover');
+      if (sp && sp._sleeve === entry.target) sp.classList.remove('vis');
     }
   });
 }, { threshold: 0.3 });
