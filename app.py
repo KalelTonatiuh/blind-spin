@@ -43,8 +43,8 @@ def mb_release_groups():
 
 @app.route("/api/mb/release-group/<mbid>")
 def mb_release_group_detail(mbid):
-    inc = request.args.get("inc", "tags+genres")
-    url = f"{MB_BASE}/release-group/{mbid}?inc={inc}&fmt=json"
+    # Hardcode inc to avoid URL encoding issues with +
+    url = f"{MB_BASE}/release-group/{mbid}?inc=tags%2Bgenres&fmt=json"
     try:
         r = requests.get(url, headers=HEADERS, timeout=10, verify=False)
         r.raise_for_status()
@@ -58,7 +58,7 @@ def mb_release_group_detail(mbid):
 
 @app.route("/api/caa/release-group/<mbid>")
 def caa_release_group(mbid):
-    # Try HTTPS first, fall back to HTTP (Railway has SSL issues with CAA)
+    # Try HTTPS then HTTP (Railway has SSL issues with CAA)
     for scheme in ("https", "http"):
         url = f"{scheme}://coverartarchive.org/release-group/{mbid}"
         try:
@@ -70,6 +70,47 @@ def caa_release_group(mbid):
         except Exception:
             continue
     return jsonify({"images": []}), 404
+
+# ── Discogs image fallback for MB results ─────────────────────────────────────
+
+@app.route("/api/discogs/cover")
+def discogs_cover():
+    """
+    Given artist + title, search Discogs and return the first cover image URL.
+    Used as fallback when CAA has no art for a MB release.
+    """
+    artist = request.args.get("artist", "")
+    title  = request.args.get("title", "")
+    if not artist or not title:
+        return jsonify({"cover": None}), 200
+
+    if not DISCOGS_TOKEN:
+        return jsonify({"cover": None}), 200
+
+    dg_headers = {
+        "User-Agent": "BlindSpin/1.0 (https://github.com/KalelTonatiuh/blind-spin)",
+        "Authorization": f"Discogs token={DISCOGS_TOKEN}",
+        "Accept": "application/json",
+    }
+
+    try:
+        r = requests.get(
+            f"{DISCOGS_BASE}/database/search",
+            headers=dg_headers,
+            params={"q": f"{artist} {title}", "type": "release", "per_page": 3, "page": 1},
+            timeout=10,
+            verify=False,
+        )
+        r.raise_for_status()
+        results = r.json().get("results", [])
+        for item in results:
+            img = item.get("cover_image") or item.get("thumb")
+            if img and "spacer" not in img:
+                return jsonify({"cover": img})
+    except Exception:
+        pass
+
+    return jsonify({"cover": None})
 
 # ── Discogs proxy ─────────────────────────────────────────────────────────────
 
