@@ -45,7 +45,7 @@ def mb_release_groups():
     offset = request.args.get("offset", 0, type=int)
     url = f"{MB_BASE}/release-group?query=*&limit=5&offset={offset}&fmt=json"
     try:
-        r = requests.get(url, headers=HEADERS, timeout=10)
+        r = requests.get(url, headers=HEADERS, timeout=10, verify=False)
         r.raise_for_status()
         return jsonify(r.json())
     except requests.exceptions.HTTPError as e:
@@ -58,7 +58,7 @@ def mb_release_group_detail(mbid):
     inc = request.args.get("inc", "tags+genres")
     url = f"{MB_BASE}/release-group/{mbid}?inc={inc}&fmt=json"
     try:
-        r = requests.get(url, headers=HEADERS, timeout=10)
+        r = requests.get(url, headers=HEADERS, timeout=10, verify=False)
         r.raise_for_status()
         return jsonify(r.json())
     except requests.exceptions.HTTPError as e:
