@@ -213,7 +213,142 @@ def discogs_random():
         "catno":  item.get("catno", ""),
     })
 
-# ── Run ───────────────────────────────────────────────────────────────────────
+# ── Internet Archive proxy ────────────────────────────────────────────────────
+
+IA_BASE = "https://archive.org"
+
+# Music-focused IA collections to draw from
+IA_COLLECTIONS = [
+    "audio_music",
+    "netlabels",
+    "georgeblood",        # 78rpm digitizations
+    "78rpm",
+    "librivoxaudio",      # exclude but keep for fallback
+    "opensource_audio",
+    "etree",              # live concert recordings
+    "audio_foreign",
+    "rock",
+    "folkmusic",
+    "classicalmusic",
+    "jazzandblues",
+    "electronic",
+]
+
+# Collections to exclude (podcasts, audiobooks, radio)
+IA_EXCLUDE = ["podcasts", "radio", "librivoxaudio", "spoken_word"]
+
+@app.route("/api/ia/random")
+def ia_random():
+    """
+    Pulls a random album/release from Internet Archive's audio collections.
+    Uses a random page + row offset against the IA search API.
+    """
+    f_genre    = request.args.get("genre", "")
+    f_year_from = request.args.get("year_from", "")
+    f_year_to   = request.args.get("year_to", "")
+
+    # Pick a random music collection to search within
+    collection = random.choice(IA_COLLECTIONS[:8])  # focus on music-specific ones
+
+    # Build query
+    q_parts = [
+        f"collection:{collection}",
+        "mediatype:audio",
+        "NOT mediatype:etree",  # exclude live recordings unless from etree collection
+    ]
+    if collection == "etree":
+        q_parts = ["collection:etree", "mediatype:etree"]
+
+    if f_genre:
+        q_parts.append(f'subject:"{f_genre}"')
+
+    year_clause = ""
+    if f_year_from and f_year_to:
+        year_clause = f" AND year:[{f_year_from} TO {f_year_to}]"
+    elif f_year_from:
+        year_clause = f" AND year:[{f_year_from} TO 2025]"
+    elif f_year_to:
+        year_clause = f" AND year:[1900 TO {f_year_to}]"
+
+    query = " AND ".join(q_parts) + year_clause
+
+    # Random page across results — IA has millions of audio items
+    page = random.randint(1, 500)
+    rows = 10
+
+    params = {
+        "q":      query,
+        "fl[]":   ["identifier", "title", "creator", "subject", "year",
+                   "description", "format", "collection", "downloads"],
+        "sort[]": "random",   # IA supports random sort natively
+        "rows":   rows,
+        "page":   page,
+        "output": "json",
+    }
+
+    try:
+        r = requests.get(
+            f"{IA_BASE}/advancedsearch.php",
+            params=params,
+            headers=HEADERS,
+            timeout=12,
+            verify=False,
+        )
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+
+    docs = data.get("response", {}).get("docs", [])
+    if not docs:
+        return jsonify({"error": "no results", "collection": collection, "page": page}), 404
+
+    # Filter out spoken word / podcasts
+    docs = [d for d in docs if not any(
+        x in str(d.get("collection", "")).lower()
+        for x in IA_EXCLUDE
+    )]
+    if not docs:
+        return jsonify({"error": "all filtered", "collection": collection}), 404
+
+    item = random.choice(docs)
+    identifier = item.get("identifier", "")
+
+    # Normalize creator field — can be string or list
+    creator = item.get("creator", "")
+    if isinstance(creator, list):
+        creator = creator[0] if creator else ""
+
+    title = item.get("title", "")
+
+    # Subject field as tags
+    subjects = item.get("subject", [])
+    if isinstance(subjects, str):
+        subjects = [subjects]
+    tags = [s.strip() for s in subjects if s.strip()][:10]
+
+    year = str(item.get("year", ""))[:4] if item.get("year") else ""
+
+    # Cover: IA serves thumbnails at a predictable URL
+    cover = f"https://archive.org/services/img/{identifier}" if identifier else ""
+
+    url_ = f"https://archive.org/details/{identifier}" if identifier else ""
+
+    return jsonify({
+        "source":     "archive",
+        "artist":     creator,
+        "title":      title,
+        "url":        url_,
+        "cover":      cover,
+        "tags":       tags,
+        "year":       year,
+        "type":       "album",
+        "genre":      tags[0] if tags else "",
+        "collection": collection,
+        "identifier": identifier,
+    })
+
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

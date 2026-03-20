@@ -181,7 +181,7 @@
 
   <div class="hdr">
     <div class="wm">Blind Spin</div>
-    <div class="hdr-sub">random release · musicbrainz · discogs · no cultural weighting</div>
+    <div class="hdr-sub">random release · musicbrainz · discogs · internet archive</div>
     <button class="filter-btn" id="filterbtn" onclick="toggleFilters()">Filters</button>
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
@@ -196,6 +196,7 @@
           <option value="">both</option>
           <option value="discogs">discogs</option>
           <option value="mb">musicbrainz</option>
+          <option value="archive">internet archive</option>
         </select>
       </div>
       <div class="fg">
@@ -242,7 +243,7 @@
       <div class="empty" id="empty">
         <div class="e1">press spin to pull a random release</div>
         <div class="e2"></div>
-        <div class="e3">sources: musicbrainz (2.8m releases) · discogs (15m releases) · random offset, no weighting</div>
+        <div class="e3">sources: musicbrainz · discogs · internet archive · random offset, no weighting</div>
         <div class="e3" style="margin-top:4px">strategy: coin-flip between sources each spin · no cultural weighting</div>
       </div>
 
@@ -328,28 +329,36 @@ async function spin() {
   if (Object.values(f).some(v => v)) log(`filters: ${JSON.stringify(f)}`, 'dim');
 
   try {
-    // Determine source from filter or coin flip
-    let useDiscogs;
-    if (f.source === 'discogs') useDiscogs = true;
-    else if (f.source === 'mb') useDiscogs = false;
-    else useDiscogs = Math.random() < 0.5;
+    // Determine source from filter or weighted random (MB 30%, Discogs 40%, IA 30%)
+    let source;
+    if (f.source === 'discogs') source = 'discogs';
+    else if (f.source === 'mb') source = 'mb';
+    else if (f.source === 'archive') source = 'archive';
+    else { const r = Math.random(); source = r < 0.3 ? 'mb' : r < 0.7 ? 'discogs' : 'archive'; }
 
-    log(`source: ${useDiscogs ? 'discogs' : 'musicbrainz'}`, 'info');
+    log(`source: ${source}`, 'info');
 
     let rg;
-    if (useDiscogs) {
+    if (source === 'discogs') {
       rg = await discogsViaProxy(f);
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
+      log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+    } else if (source === 'archive') {
+      rg = await iaViaProxy(f);
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.collection}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
       try {
         rg = await mbViaProxy(f);
       } catch(mbErr) {
-        if (f.source === 'mb') throw mbErr; // user explicitly wants MB, surface the error
+        if (f.source === 'mb') throw mbErr;
         log(`[mb] all attempts failed, falling back to discogs`, 'warn');
         rg = await discogsViaProxy(f);
         log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
         log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+        render(rg);
+        btn.classList.remove('ld'); btn.disabled = false; busy = false;
+        return;
       }
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
 
@@ -458,6 +467,50 @@ async function discogsViaProxy(f={}) {
   throw new Error('could not get a Discogs result after ' + MAX_TRIES + ' attempts');
 }
 
+// ── IA: pick a random release from Internet Archive ─────────────────────────
+async function iaViaProxy(f={}) {
+  const MAX_TRIES = 5;
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    log(`[ia] attempt ${attempt+1}`, 'dim');
+    let data;
+    try {
+      const params = new URLSearchParams();
+      if (f.yearFrom) params.set('year_from', f.yearFrom);
+      if (f.yearTo)   params.set('year_to', f.yearTo);
+      if (f.genre)    params.set('genre', f.genre);
+      const qs = params.toString() ? '?' + params.toString() : '';
+      data = await apiFetch('/api/ia/random' + qs, 'ia');
+    } catch(e) {
+      log(`[ia] fetch failed: ${e.message}`, 'warn');
+      await sleep(400);
+      continue;
+    }
+    if (!data.title) {
+      log('[ia] empty result, retrying...', 'dim');
+      await sleep(300);
+      continue;
+    }
+    log(`[ia] collection=${data.collection}`, 'dim');
+    return {
+      source:     'archive',
+      artist:     data.artist || 'Unknown',
+      title:      data.title,
+      url:        data.url,
+      cover:      data.cover || null,
+      tags:       data.tags  || [],
+      year:       data.year  || '',
+      type:       'album',
+      genre:      data.genre || '',
+      collection: data.collection || '',
+      mbid:       null,
+      secondaryTypes: [],
+      country: '',
+      label: '',
+    };
+  }
+  throw new Error('could not get an Internet Archive result after ' + MAX_TRIES + ' attempts');
+}
+
 // ── Tags ──────────────────────────────────────────────────────────────────────
 async function fetchTags(mbid) {
   try {
@@ -549,7 +602,8 @@ function render(r) {
     covEl.innerHTML = '<div class="cnone">no art</div>';
   }
 
-  document.getElementById('csrc').textContent = r.source === 'discogs' ? 'discogs.com' : 'musicbrainz.org';
+  const srcLabels = { discogs: 'discogs.com', mb: 'musicbrainz.org', archive: 'archive.org' };
+  document.getElementById('csrc').textContent = srcLabels[r.source] || r.source;
   document.getElementById('cart').textContent = r.artist;
   document.getElementById('ctit').textContent = r.title;
 
@@ -561,6 +615,8 @@ function render(r) {
   if (r.source === 'discogs') {
     if (r.genre)    pills.innerHTML += pill(r.genre);
     if (r.country)  pills.innerHTML += pill(r.country);
+  } else if (r.source === 'archive') {
+    if (r.collection) pills.innerHTML += pill(r.collection);
   } else {
     if (r.country) pills.innerHTML += pill(r.country);
     for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
@@ -590,6 +646,8 @@ function render(r) {
   let sourceLink = '';
   if (r.source === 'discogs' && r.url) {
     sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Discogs ↗</a>`;
+  } else if (r.source === 'archive' && r.url) {
+    sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Archive.org ↗</a>`;
   } else if (r.mbid) {
     const mbUrl = `https://musicbrainz.org/release-group/${r.mbid}`;
     sourceLink = `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>`;
