@@ -49,7 +49,15 @@ def index():
 @app.route("/api/mb/release-groups")
 def mb_release_groups():
     offset = request.args.get("offset", 0, type=int)
-    url = f"{MB_BASE}/release-group?query=*&limit=5&offset={offset}&fmt=json"
+    # Smarter query: require primary type, tag count > 0, exclude various/unknown artists
+    # Use Lucene syntax to bias toward releases with real metadata
+    query = (
+        'primarytype:(Album OR EP) AND '
+        'NOT artist:"Various Artists" AND '
+        'NOT artist:"Unknown" AND '
+        'firstreleasedate:[1950 TO 2025]'
+    )
+    url = f"{MB_BASE}/release-group?query={requests.utils.quote(query)}&limit=10&offset={offset}&fmt=json"
     try:
         r = session.get(url, headers=HEADERS, timeout=10, verify=False)
         r.raise_for_status()
@@ -229,21 +237,119 @@ def discogs_random():
         "label":  (item.get("label") or [""])[0],
         "country": item.get("country", ""),
         "catno":  item.get("catno", ""),
+        "release_id": item.get("id", ""),
     })
+
+# ── Discogs release detail (tracklist, notes) ─────────────────────────────────
+
+@app.route("/api/discogs/release/<int:release_id>")
+def discogs_release(release_id):
+    if not DISCOGS_TOKEN:
+        return jsonify({"error": "no token"}), 500
+
+    dg_headers = {
+        "User-Agent": "BlindSpin/1.0 (https://github.com/KalelTonatiuh/blind-spin)",
+        "Authorization": f"Discogs token={DISCOGS_TOKEN}",
+        "Accept": "application/json",
+    }
+
+    try:
+        r = session.get(
+            f"{DISCOGS_BASE}/releases/{release_id}",
+            headers=dg_headers, timeout=10, verify=False
+        )
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+
+    tracklist = []
+    for t in data.get("tracklist", []):
+        tracklist.append({
+            "pos":      t.get("position", ""),
+            "title":    t.get("title", ""),
+            "duration": t.get("duration", ""),
+        })
+
+    notes = data.get("notes", "")[:400] if data.get("notes") else ""
+
+    labels = data.get("labels", [])
+    label  = labels[0].get("name", "") if labels else ""
+    catno  = labels[0].get("catno", "") if labels else ""
+
+    return jsonify({
+        "tracklist": tracklist,
+        "notes":     notes,
+        "label":     label,
+        "catno":     catno,
+    })
+
+# ── Wikipedia artist blurb ────────────────────────────────────────────────────
+
+@app.route("/api/wiki/artist")
+def wiki_artist():
+    artist = request.args.get("artist", "").strip()
+    if not artist:
+        return jsonify({"blurb": None}), 200
+
+    try:
+        # Search for the artist page
+        search_r = session.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query",
+                "list":   "search",
+                "srsearch": f"{artist} musician OR band",
+                "srlimit": 3,
+                "format": "json",
+            },
+            headers={"User-Agent": "BlindSpin/1.0"},
+            timeout=8, verify=False
+        )
+        search_r.raise_for_status()
+        results = search_r.json().get("query", {}).get("search", [])
+        if not results:
+            return jsonify({"blurb": None})
+
+        title = results[0]["title"]
+
+        # Fetch extract
+        extract_r = session.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action":      "query",
+                "prop":        "extracts",
+                "exintro":     True,
+                "explaintext": True,
+                "exsentences": 3,
+                "titles":      title,
+                "format":      "json",
+            },
+            headers={"User-Agent": "BlindSpin/1.0"},
+            timeout=8, verify=False
+        )
+        extract_r.raise_for_status()
+        pages = extract_r.json().get("query", {}).get("pages", {})
+        page  = next(iter(pages.values()), {})
+        extract = page.get("extract", "").strip()
+
+        if not extract or len(extract) < 30:
+            return jsonify({"blurb": None})
+
+        return jsonify({"blurb": extract, "wiki_title": title})
+
+    except Exception as e:
+        return jsonify({"blurb": None})
 
 # ── Internet Archive proxy ────────────────────────────────────────────────────
 
 IA_BASE = "https://archive.org"
 
-# Music-focused IA collections to draw from
-IA_COLLECTIONS = [
-    "audio_music",
+# Modern music collections
+IA_COLLECTIONS_MODERN = [
     "netlabels",
-    "georgeblood",        # 78rpm digitizations
-    "78rpm",
-    "librivoxaudio",      # exclude but keep for fallback
     "opensource_audio",
-    "etree",              # live concert recordings
+    "audio_music",
     "audio_foreign",
     "rock",
     "folkmusic",
@@ -252,21 +358,30 @@ IA_COLLECTIONS = [
     "electronic",
 ]
 
+# Historical/archival collections (78rpm era — surfaced separately)
+IA_COLLECTIONS_HISTORICAL = [
+    "georgeblood",
+    "78rpm",
+    "audio_music",
+]
+
 # Collections to exclude (podcasts, audiobooks, radio)
 IA_EXCLUDE = ["podcasts", "radio", "librivoxaudio", "spoken_word"]
+IA_JUNK_ARTISTS = {"unknown", "various", "various artists", "", "n/a"}
 
 @app.route("/api/ia/random")
 def ia_random():
     """
     Pulls a random album/release from Internet Archive's audio collections.
-    Uses a random page + row offset against the IA search API.
+    historical=1 param surfaces 78rpm/archival material specifically.
     """
-    f_genre    = request.args.get("genre", "")
-    f_year_from = request.args.get("year_from", "")
-    f_year_to   = request.args.get("year_to", "")
+    f_genre      = request.args.get("genre", "")
+    f_year_from  = request.args.get("year_from", "")
+    f_year_to    = request.args.get("year_to", "")
+    historical   = request.args.get("historical", "0") == "1"
 
-    # Pick a random music collection to search within
-    collection = random.choice(IA_COLLECTIONS[:8])  # focus on music-specific ones
+    pool = IA_COLLECTIONS_HISTORICAL if historical else IA_COLLECTIONS_MODERN
+    collection = random.choice(pool)
 
     # Build query
     q_parts = [
@@ -345,6 +460,9 @@ def ia_random():
     creator = item.get("creator", "")
     if isinstance(creator, list):
         creator = creator[0] if creator else ""
+    # Skip items with junk artist names
+    if creator.strip().lower() in IA_JUNK_ARTISTS:
+        return jsonify({"error": "junk artist", "collection": collection}), 404
 
     title = item.get("title", "")
 

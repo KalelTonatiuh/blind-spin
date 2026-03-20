@@ -169,14 +169,15 @@
 
   /* ── CARD ── */
   .card { display: none; }
-  .card.on { display: flex; flex-direction: column; min-height: 100%; animation: fu 0.3s ease; }
+  .card.on { display: flex; flex-direction: column; height: 100%; animation: fu 0.3s ease; }
   @keyframes fu { from { opacity:0; } to { opacity:1; } }
 
   /* Blurred cover wash fills the top section */
   .cbg {
     position: relative; overflow: hidden;
     padding: 36px 32px 28px; display: flex; gap: 28px; align-items: flex-end;
-    min-height: 260px;
+    flex: 1; min-height: 260px;
+    background: linear-gradient(135deg, #1a1208 0%, #0e0c08 40%, #141008 100%);
   }
   .cbg-wash {
     position: absolute; inset: -20px; background-size: cover; background-position: center;
@@ -207,7 +208,7 @@
 
   /* Content below the wash — aged sleeve liner notes */
   .cbot {
-    padding: 22px 32px 28px; flex: 1;
+    padding: 22px 32px 28px; flex-shrink: 0;
     background: linear-gradient(to bottom, #0e0c08 0%, #0c0a06 100%);
     position: relative;
   }
@@ -520,6 +521,163 @@
     animation: shimmer 1.4s infinite;
   }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── HISTORY & FAVORITES TRAY ── */
+  .tray {
+    position: fixed; bottom: 0; left: 0; right: 220px; z-index: 500;
+    background: linear-gradient(to top, #0e0c08 0%, rgba(14,12,8,0.95) 100%);
+    border-top: 1px solid #2a2010;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+    transform: translateY(100%); transition: transform 0.2s ease;
+    max-height: 120px;
+  }
+  .tray.open { transform: translateY(0); }
+  .tray-hdr {
+    display: flex; align-items: center; gap: 10px; padding: 6px 16px 4px;
+    border-bottom: 1px solid #1a1408;
+  }
+  .tray-tab {
+    font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #5a4820; cursor: pointer; padding: 3px 8px; border: 1px solid transparent;
+    border-radius: 2px; transition: all 0.1s; background: none; font-family: inherit;
+  }
+  .tray-tab.active { color: #c8a040; border-color: #4a3818; background: #1a1208; }
+  .tray-close { margin-left: auto; font-size: 0.5rem; color: #3a2a10; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .tray-close:hover { color: #7a5a28; }
+  .tray-scroll { display: flex; gap: 8px; padding: 8px 16px 10px; overflow-x: auto; scrollbar-width: none; }
+  .tray-scroll::-webkit-scrollbar { display: none; }
+  .tray-item {
+    flex-shrink: 0; width: 64px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    opacity: 0.7; transition: opacity 0.15s;
+  }
+  .tray-item:hover { opacity: 1; }
+  .tray-thumb {
+    width: 54px; height: 54px; background: #1a1208;
+    border: 1px solid #2a2010; overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tray-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .tray-thumb-none { font-size: 1rem; opacity: 0.2; }
+  .tray-item-title { font-size: 0.42rem; color: #5a4820; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 64px; letter-spacing: 0.04em; }
+  .tray-item.fav .tray-thumb { border-color: #7a5020; box-shadow: 0 0 6px rgba(200,160,64,0.2); }
+
+  /* Tray toggle button in header */
+  .tray-btn {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    z-index: 501; background: #1a1208; border: 1px solid #3a2a10;
+    border-bottom: none; color: #5a4020; font-family: inherit;
+    font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 4px 14px; cursor: pointer; transition: color 0.1s;
+  }
+  .tray-btn:hover { color: #c8a040; }
+
+  /* Favorite star on card */
+  .fav-btn {
+    position: absolute; top: 12px; right: 12px; z-index: 2;
+    background: none; border: none; cursor: pointer; font-size: 1.1rem;
+    color: rgba(200,160,64,0.3); transition: color 0.15s, transform 0.15s;
+    line-height: 1;
+  }
+  .fav-btn:hover { color: rgba(200,160,64,0.8); transform: scale(1.2); }
+  .fav-btn.active { color: #c8a040; }
+
+  /* Export button */
+  .export-btn {
+    font-size: 0.48rem; color: #5a4020; background: none;
+    border: 1px solid #2a1e0c; padding: 2px 8px; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.1em; text-transform: uppercase;
+    border-radius: 2px; transition: all 0.1s;
+  }
+  .export-btn:hover { color: #c8a040; border-color: #5a3a18; }
+
+  /* ── SLEEVE POPOVER ── */
+  .sleeve-popover {
+    position: absolute; bottom: 260px; left: 50%; transform: translateX(-50%);
+    width: 220px; z-index: 10;
+    background: linear-gradient(to bottom, #1e180c, #141008);
+    border: 1px solid #4a3818;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(200,160,64,0.1);
+    padding: 12px; border-radius: 3px;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .sleeve-popover.vis { opacity: 1; pointer-events: all; }
+  .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
+  .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .sp-tag { display: inline-block; font-size: 0.48rem; color: #5a4828; border: 1px solid #2a2010; padding: 1px 5px; margin: 0 3px 3px 0; border-radius: 2px; }
+  .sleeve-open-btn {
+    display: block; width: 100%; margin-top: 8px; padding: 6px;
+    background: linear-gradient(to bottom, #2a2010, #1a1408);
+    border: 1px solid #5a4020; color: #c8a040;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.54rem;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    border-radius: 2px; transition: all 0.1s;
+  }
+  .sleeve-open-btn:hover { background: linear-gradient(to bottom, #3a2e18, #2a2010); }
+
+  /* ── SHELF LABEL ROW ── */
+  .shelf-label-row { display: flex; align-items: center; padding: 22px 28px 6px; }
+  .shelf-label { font-size: 0.52rem; letter-spacing: 0.28em; text-transform: uppercase; color: #7a5c30; font-family: 'IBM Plex Mono', monospace; flex: 1; }
+  .shelf-refresh {
+    background: none; border: 1px solid #3a2a14; color: #4a3820;
+    font-size: 0.7rem; width: 22px; height: 22px; cursor: pointer;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; padding: 0;
+  }
+  .shelf-refresh:hover { color: #c8a040; border-color: #7a5820; transform: rotate(90deg); }
+
+  /* ── EMPTY STATE — vinyl crate ── */
+  .empty {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0; position: relative; overflow: hidden;
+  }
+  .empty-crate {
+    width: 180px; height: 140px; position: relative; margin-bottom: 28px;
+    flex-shrink: 0;
+  }
+  /* Crate box */
+  .empty-crate::before {
+    content: ''; position: absolute; inset: 20px 0 0;
+    background: linear-gradient(to bottom, #2a1e0c 0%, #1e1608 100%);
+    border: 1px solid #3a2a12; border-radius: 2px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.5);
+  }
+  /* Crate slats */
+  .empty-crate::after {
+    content: ''; position: absolute; inset: 20px 0 0;
+    background-image: repeating-linear-gradient(
+      90deg, transparent 0, transparent 22px,
+      rgba(0,0,0,0.25) 22px, rgba(0,0,0,0.25) 23px
+    );
+    border-radius: 2px;
+  }
+  .crate-records {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 3px; z-index: 1;
+  }
+  .crate-rec {
+    width: 26px; height: 34px; border-radius: 1px;
+    box-shadow: 1px 0 3px rgba(0,0,0,0.5);
+  }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.8rem; color: #3a2e16; margin-bottom: 8px; }
+  .empty-sub { font-size: 0.54rem; color: #2a2010; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .empty-hint { font-size: 0.48rem; color: #1e1808; letter-spacing: 0.08em; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 680px) {
+    .tray { right: 0; }
+    .body { grid-template-columns: 1fr; grid-template-rows: 1fr 160px; }
+    .main { border-right: none; border-bottom: 1px solid var(--border); }
+    .hdr-sub { display: none; }
+    .ctit { font-size: 2rem; }
+    .cbg { min-height: 200px; padding: 24px 18px 20px; gap: 16px; }
+    .cov { width: 120px; height: 120px; }
+    .cbot { padding: 16px 18px 20px; }
+    .fbar.open { max-height: 260px; }
+    .fbar-inner { gap: 8px 14px; }
+  }
 </style>
 </head>
 <body>
@@ -586,16 +744,25 @@
 
   <div class="body">
     <div class="main">
-      <div class="empty" id="empty" style="padding: 28px 32px;">
-        <div class="e1">press spin to pull a random release</div>
-        <div class="e2"></div>
-        <div class="e3">sources: musicbrainz · discogs · internet archive · random offset, no weighting</div>
-        <div class="e3" style="margin-top:4px">strategy: coin-flip between sources each spin · no cultural weighting</div>
+      <div class="empty" id="empty">
+        <div class="empty-crate">
+          <div class="crate-records">
+            <div class="crate-rec" style="background:linear-gradient(135deg,#3a2810,#1e1208)"></div>
+            <div class="crate-rec" style="background:linear-gradient(135deg,#2a3820,#141e10)"></div>
+            <div class="crate-rec" style="background:linear-gradient(135deg,#382030,#1e1018)"></div>
+            <div class="crate-rec" style="background:linear-gradient(135deg,#203038,#10181e)"></div>
+            <div class="crate-rec" style="background:linear-gradient(135deg,#382810,#1e1608)"></div>
+          </div>
+        </div>
+        <div class="empty-title">Blind Spin</div>
+        <div class="empty-sub">Press spin or hit spacebar</div>
+        <div class="empty-hint">musicbrainz · discogs · internet archive · no cultural weighting</div>
       </div>
 
       <div class="card" id="card">
         <div class="cbg">
           <div class="cbg-wash" id="cbg-wash"></div>
+          <button class="fav-btn" id="favbtn" onclick="toggleFav()" title="Favorite">☆</button>
           <div class="cbg-vignette"></div>
           <div class="cov" id="cov"><div class="cnone">no art</div></div>
           <div class="cmeta">
@@ -636,6 +803,19 @@
     </div>
   </div>
 
+  <!-- ── HISTORY / FAVORITES TRAY ── -->
+  <button class="tray-btn" id="traybtn" onclick="toggleTray()">▲ History</button>
+  <div class="tray" id="tray">
+    <div class="tray-hdr">
+      <button class="tray-tab active" id="tab-history" onclick="switchTray('history')">History</button>
+      <button class="tray-tab" id="tab-favs" onclick="switchTray('favs')">Favorites</button>
+      <button class="export-btn" onclick="exportFavs()">Export CSV</button>
+      <button class="tray-close" onclick="toggleTray()">✕</button>
+    </div>
+    <div class="tray-scroll" id="tray-scroll"></div>
+  </div>
+
+
   <!-- ── RECORD STORE OVERLAY ── -->
   <div class="store-overlay" id="store-overlay">
     <div class="store-hdr">
@@ -661,6 +841,16 @@ function log(msg, t='ok') {
   else if(!cdot.classList.contains('er')) cdot.className='cdot on';
 }
 function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !e.target.matches('input,select,textarea,button')) {
+    e.preventDefault();
+    if (!busy && !storeOpen) spin();
+  }
+  if (e.code === 'KeyB' && !e.target.matches('input,select,textarea')) toggleStore();
+  if (e.code === 'Escape' && storeOpen) toggleStore();
+});
 
 // ── NOTE: constants defined below in mbViaProxy section ─────────────────────────────────────────────────────────────────────
 
@@ -1033,9 +1223,11 @@ function render(r) {
   const note = document.getElementById('note');
   note.style.display = 'none';
 
-  // Store for similar button
+  // Store for similar button + add to history
   lastResult = r;
   document.getElementById('simbtn').classList.add('vis');
+  addToHistory(r);
+  updateFavBtn();
 
   showCard();
   log('rendered.', 'ok');
@@ -1217,10 +1409,110 @@ async function spinWithFilters(f) {
 }
 
 
+
+// ── HISTORY & FAVORITES ───────────────────────────────────────────────────────
+const MAX_HISTORY = 20;
+let history = [];
+let favorites = JSON.parse(localStorage.getItem('bs_favs') || '[]');
+let trayOpen = false;
+let trayTab = 'history';
+
+function addToHistory(r) {
+  history.unshift({ ...r, _ts: Date.now() });
+  if (history.length > MAX_HISTORY) history.pop();
+  if (trayOpen && trayTab === 'history') renderTray();
+  // Update tray button label
+  document.getElementById('traybtn').textContent = `▲ History (${history.length})`;
+}
+
+function toggleFav() {
+  if (!lastResult) return;
+  const id = lastResult.url || (lastResult.mbid) || (lastResult.artist + lastResult.title);
+  const idx = favorites.findIndex(f => (f.url || f.artist + f.title) === id);
+  const btn = document.getElementById('favbtn');
+  if (idx >= 0) {
+    favorites.splice(idx, 1);
+    btn.textContent = '☆'; btn.classList.remove('active');
+  } else {
+    favorites.unshift({ ...lastResult, _ts: Date.now() });
+    btn.textContent = '★'; btn.classList.add('active');
+  }
+  localStorage.setItem('bs_favs', JSON.stringify(favorites));
+  if (trayOpen && trayTab === 'favs') renderTray();
+}
+
+function updateFavBtn() {
+  if (!lastResult) return;
+  const id = lastResult.url || (lastResult.mbid) || (lastResult.artist + lastResult.title);
+  const isFav = favorites.some(f => (f.url || f.artist + f.title) === id);
+  const btn = document.getElementById('favbtn');
+  btn.textContent = isFav ? '★' : '☆';
+  btn.classList.toggle('active', isFav);
+}
+
+function toggleTray() {
+  trayOpen = !trayOpen;
+  document.getElementById('tray').classList.toggle('open', trayOpen);
+  document.getElementById('traybtn').textContent = trayOpen
+    ? `▼ History (${history.length})`
+    : `▲ History (${history.length})`;
+  if (trayOpen) renderTray();
+}
+
+function switchTray(tab) {
+  trayTab = tab;
+  document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+  document.getElementById('tab-favs').classList.toggle('active', tab === 'favs');
+  renderTray();
+}
+
+function renderTray() {
+  const items = trayTab === 'history' ? history : favorites;
+  const scroll = document.getElementById('tray-scroll');
+  if (!items.length) {
+    scroll.innerHTML = `<div style="color:#2a1e0c;font-size:0.52rem;padding:8px 0;letter-spacing:0.1em;text-transform:uppercase;">${trayTab === 'history' ? 'No history yet' : 'No favorites yet'}</div>`;
+    return;
+  }
+  scroll.innerHTML = items.map((r, i) => {
+    const thumb = r.cover
+      ? `<img src="${escA(r.cover)}" alt="" onerror="this.parentElement.innerHTML='<span class=\'tray-thumb-none\'>◈</span>'">`
+      : '<span class="tray-thumb-none">◈</span>';
+    const isFav = trayTab === 'favs';
+    return `<div class="tray-item${isFav ? ' fav' : ''}" onclick="openTrayItem(${i})">
+      <div class="tray-thumb">${thumb}</div>
+      <div class="tray-item-title">${esc(r.title || '')}</div>
+    </div>`;
+  }).join('');
+}
+
+function openTrayItem(i) {
+  const items = trayTab === 'history' ? history : favorites;
+  const r = items[i];
+  if (!r) return;
+  toggleTray();
+  // Re-render the result
+  render(r);
+}
+
+function exportFavs() {
+  if (!favorites.length) return;
+  const rows = [['Artist','Title','Year','Genre','Country','Source','URL']];
+  favorites.forEach(r => rows.push([
+    r.artist||'', r.title||'', r.year||'', r.genre||'',
+    r.country||'', r.source||'', r.url||''
+  ]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'blind-spin-favorites.csv';
+  a.click();
+}
+
 // ── RECORD STORE ─────────────────────────────────────────────────────────────
 const STORE_GENRES = [
   'Rock', 'Electronic', 'Jazz', 'Hip Hop',
-  'Classical', 'Folk, World, & Country', 'Funk / Soul', 'Latin'
+  'Classical', 'Folk, World, & Country', 'Funk / Soul', 'Latin',
+  'Blues', 'Reggae', 'Pop', 'Metal'
 ];
 let storeLoaded = false;
 let storeOpen = false;
@@ -1245,7 +1537,10 @@ async function loadStore() {
     row.className = 'shelf-row';
     row.id = `shelf-${genre.replace(/[^a-z]/gi,'_')}`;
     row.innerHTML = `
-      <div class="shelf-label">${genre}</div>
+      <div class="shelf-label-row">
+        <span class="shelf-label">${genre}</span>
+        <button class="shelf-refresh" onclick="refreshShelf('${genre}')" title="Refresh shelf">↻</button>
+      </div>
       <div class="shelf-surface">
         <div class="shelf-records" id="records-${genre.replace(/[^a-z]/gi,'_')}">
           ${Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('')}
@@ -1256,7 +1551,7 @@ async function loadStore() {
 
   // Fetch all genres in parallel
   let loaded = 0;
-  status.textContent = '0 / 8 loaded';
+  status.textContent = `0 / ${STORE_GENRES.length} loaded`;
 
   const fetches = STORE_GENRES.map(async genre => {
     const results = [];
@@ -1308,12 +1603,24 @@ function makeSleeve(r) {
         <div class="sleeve-title">${esc(r.title)}</div>
         <div class="sleeve-year">${esc(r.year || '')} ${esc(r.country || '')}</div>
       </div>
+    </div>
+    <div class="sleeve-popover">
+      <div class="sp-artist">${esc(r.artist)}</div>
+      <div class="sp-title">${esc(r.title)}</div>
+      <div class="sp-meta">${esc(r.year||'')}${r.country?' · '+esc(r.country):''}${r.genre?' · '+esc(r.genre):''}</div>
+      ${(r.tags||[]).slice(0,4).map(t=>`<span class="sp-tag">${esc(t)}</span>`).join('')}
+      <button class="sleeve-open-btn">Open full record ↗</button>
     </div>`;
 
-  div.addEventListener('click', () => {
-    // Close store and open this release in main view
-    toggleStore();
-    openStoreRelease(r);
+  // Single click: show popover. Double click or popover button: open full card
+  div.addEventListener('click', (e) => {
+    if (e.target.closest('.sleeve-open-btn')) { toggleStore(); openStoreRelease(r); return; }
+    // Toggle popover
+    document.querySelectorAll('.sleeve-popover').forEach(p => {
+      if (!p.closest('.sleeve').contains(e.target)) p.classList.remove('vis');
+    });
+    const pop = div.querySelector('.sleeve-popover');
+    if (pop) pop.classList.toggle('vis');
   });
 
   return div;
@@ -1326,6 +1633,8 @@ async function openStoreRelease(r) {
   btn.classList.add('ld'); btn.disabled = true;
   hideCard(); clrLog();
   log(`opening: "${r.artist}" — "${r.title}"`, 'info');
+  // Brief pause for overlay close animation to feel intentional
+  await sleep(120);
 
   // Result already has all needed fields — just render it
   const release = {
@@ -1349,6 +1658,29 @@ async function openStoreRelease(r) {
   render(release);
   btn.classList.remove('ld'); btn.disabled = false;
   busy = false;
+}
+
+// ── SHELF REFRESH ────────────────────────────────────────────────────────────
+async function refreshShelf(genre) {
+  const key = genre.replace(/[^a-z]/gi,'_');
+  const container = document.getElementById('records-' + key);
+  if (!container) return;
+  container.innerHTML = Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('');
+  const results = [];
+  const promises = Array(5).fill(0).map(async () => {
+    try {
+      const params = new URLSearchParams({ genre, format: 'Vinyl' });
+      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
+      if (data.artist && data.title) results.push(data);
+    } catch {}
+  });
+  await Promise.allSettled(promises);
+  container.innerHTML = '';
+  if (!results.length) {
+    container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
+  } else {
+    results.forEach(r => container.appendChild(makeSleeve(r)));
+  }
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
