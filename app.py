@@ -119,9 +119,10 @@ def bc_random():
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
-    items = data.get("items", [])
+    # Dump top-level keys so we can see the real structure if items is wrong
+    items = data.get("items") or data.get("releases") or data.get("results") or []
     if not items:
-        return jsonify({"error": "no items", "tag": tag, "page": page}), 404
+        return jsonify({"error": "no items", "tag": tag, "page": page, "keys": list(data.keys())}), 404
 
     item = random.choice(items)
 
