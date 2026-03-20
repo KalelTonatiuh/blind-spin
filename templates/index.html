@@ -493,6 +493,7 @@
     display: none; position: fixed; inset: 0; z-index: 1000;
     background: #1a1208;
     overflow-y: auto;
+    overscroll-behavior: contain;
     flex-direction: column;
   }
   .store-overlay.open { display: flex; }
@@ -540,6 +541,7 @@
       inset 0 -2px 6px rgba(0,0,0,0.4),
       0 4px 12px rgba(0,0,0,0.6);
     overflow-x: auto; overflow-y: visible;
+    overscroll-behavior-x: contain;
     scrollbar-width: thin;
     scrollbar-color: #4a3018 #2a1a08;
   }
@@ -699,7 +701,7 @@
 
   /* Tray toggle button — looks like a physical pull-tab on a drawer */
   .tray-btn {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 0; left: 18px;
     z-index: 501; cursor: pointer; transition: all 0.1s;
     font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem;
     letter-spacing: 0.18em; text-transform: uppercase;
@@ -1130,7 +1132,7 @@
         </div>
         <div class="cbot">
           <div class="sec" id="ssec" style="display:none"><div class="slbl">stats</div><div class="srow" id="srow"></div></div>
-          <div class="sec" id="gsec" style="display:none"><div class="slbl">genres / tags</div><div class="grow" id="grow"></div></div>
+          <div class="sec" id="gsec" style="display:none"><div class="grow" id="grow"></div></div>
           <div class="sec" id="dsec" style="display:none"><div class="slbl">tracklist</div><div class="tlist" id="tlist"></div></div>
           <div id="infosec" style="display:none">
             <div id="blurbsec" style="display:none">
@@ -1937,7 +1939,8 @@ function toggleStore() {
   storeOpen = !storeOpen;
   overlay.classList.toggle('open', storeOpen);
   document.getElementById('storebtn').classList.toggle('on', storeOpen);
-  if (storeOpen && !storeLoaded) loadStore();
+  const storeBody = document.getElementById('store-body');
+  if (storeOpen && (!storeLoaded || !storeBody.children.length)) loadStore();
 }
 
 async function loadStore() {
@@ -1966,13 +1969,13 @@ async function loadStore() {
 
   // Fetch all genres in parallel
   let loaded = 0;
-  status.textContent = `0 / ${STORE_GENRES.length} loaded`;
+  status.textContent = `loading ${STORE_GENRES.length} shelves...`;
 
   const fetches = STORE_GENRES.map(async genre => {
     const results = [];
     const promises = Array(5).fill(0).map(async () => {
       try {
-        const params = new URLSearchParams({ genre, format: 'Vinyl' });
+        const params = new URLSearchParams({ genre });
         const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
         if (data.artist && data.title) results.push(data);
       } catch {}
@@ -2103,7 +2106,7 @@ async function refreshShelf(genre) {
   const results = [];
   const promises = Array(5).fill(0).map(async () => {
     try {
-      const params = new URLSearchParams({ genre, format: 'Vinyl' });
+      const params = new URLSearchParams({ genre });
       const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
       if (data.artist && data.title) results.push(data);
     } catch {}
