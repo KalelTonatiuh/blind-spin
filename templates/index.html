@@ -635,40 +635,16 @@
     background: radial-gradient(ellipse at 50% 38%, #1e1608 0%, #0c0a06 65%);
   }
   .empty-crate {
-    width: 300px; height: 200px; position: relative; margin-bottom: 32px;
+    width: 240px; height: 240px; position: relative; margin-bottom: 28px;
     flex-shrink: 0;
-    /* Perspective tilt — looking slightly down into the crate */
-    transform: perspective(600px) rotateX(8deg);
-    transform-origin: bottom center;
+    animation: slow-spin 18s linear infinite;
   }
-  /* Outer crate walls */
-  .empty-crate::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(160deg, #5a4020 0%, #3e2c14 40%, #2a1e0c 100%);
-    border: 3px solid #7a5a28;
-    border-bottom: 5px solid #1a1008;
-    box-shadow:
-      inset 0 4px 12px rgba(255,180,60,0.07),
-      inset 2px 0 6px rgba(0,0,0,0.3),
-      inset -2px 0 6px rgba(0,0,0,0.3),
-      inset 0 -6px 14px rgba(0,0,0,0.6),
-      0 10px 30px rgba(0,0,0,0.8),
-      0 3px 0 #0e0904;
-    border-radius: 2px;
-  }
-  /* Vertical slats on the crate */
-  .empty-crate::after {
-    content: ''; position: absolute; inset: 0; border-radius: 2px;
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent 0, transparent 42px,
-      rgba(0,0,0,0.4) 42px, rgba(0,0,0,0.4) 45px
-    );
-    pointer-events: none;
-  }
+  @keyframes slow-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .empty-crate::before { display: none; }
+  .empty-crate::after  { display: none; }
   /* Records sit inside the crate — they peek above the top edge */
 
-  .crate-svg { width: 100%; height: 100%; }
+  .crate-svg { width: 100%; height: 100%; display: block; }
 
   .empty-title {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -761,67 +737,100 @@
     <div class="main">
       <div class="empty" id="empty">
         <div class="empty-crate">
-          <svg class="crate-svg" viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg">
-            <!-- Crate body -->
-            <rect x="8" y="50" width="284" height="172" rx="3" fill="#4a3418" stroke="#8a6430" stroke-width="2.5"/>
-            <!-- Crate inner fill (darker) -->
-            <rect x="14" y="56" width="272" height="160" rx="1" fill="#1e1408"/>
-            <!-- Vertical slats -->
-            <line x1="80"  y1="50" x2="80"  y2="222" stroke="#6a4e28" stroke-width="3"/>
-            <line x1="160" y1="50" x2="160" y2="222" stroke="#6a4e28" stroke-width="3"/>
-            <line x1="240" y1="50" x2="240" y2="222" stroke="#6a4e28" stroke-width="3"/>
-            <!-- Top rim -->
-            <rect x="6" y="46" width="288" height="14" rx="2" fill="#6a4e28" stroke="#9a7840" stroke-width="1.5"/>
-            <rect x="6" y="46" width="288" height="4" rx="2" fill="rgba(255,200,80,0.12)"/>
+          <svg class="crate-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Vinyl groove radial gradient — dark black disc with subtle sheen -->
+    <radialGradient id="vinyl-body" cx="42%" cy="38%" r="55%">
+      <stop offset="0%"   stop-color="#2a2820"/>
+      <stop offset="30%"  stop-color="#141210"/>
+      <stop offset="70%"  stop-color="#0c0a08"/>
+      <stop offset="100%" stop-color="#181614"/>
+    </radialGradient>
+    <!-- Groove highlight — simulates light catching the grooves -->
+    <radialGradient id="groove-sheen" cx="35%" cy="30%" r="60%">
+      <stop offset="0%"   stop-color="rgba(200,180,120,0.18)"/>
+      <stop offset="40%"  stop-color="rgba(180,160,100,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <!-- Label gradient — aged paper/cardboard feel -->
+    <radialGradient id="label-bg" cx="50%" cy="40%" r="55%">
+      <stop offset="0%"   stop-color="#c8a060"/>
+      <stop offset="50%"  stop-color="#a07838"/>
+      <stop offset="100%" stop-color="#7a5820"/>
+    </radialGradient>
+    <!-- Specular highlight on disc edge -->
+    <radialGradient id="edge-spec" cx="30%" cy="25%" r="50%">
+      <stop offset="0%"   stop-color="rgba(255,220,140,0.15)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <!-- Drop shadow filter -->
+    <filter id="rec-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#000" flood-opacity="0.8"/>
+    </filter>
+    <clipPath id="disc-clip">
+      <circle cx="150" cy="150" r="138"/>
+    </clipPath>
+  </defs>
 
-            <!-- Record 1 — brick red -->
-            <g transform="translate(22,6) rotate(-6,21,108)">
-              <rect width="42" height="172" rx="2" fill="#c04428" stroke="#1a0c08" stroke-width="1"/>
-              <circle cx="21" cy="86" r="16" fill="#8a2e18" stroke="#1a0808" stroke-width="1"/>
-              <circle cx="21" cy="86" r="5"  fill="#1a0808"/>
-              <circle cx="21" cy="86" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
-            <!-- Record 2 — forest green -->
-            <g transform="translate(64,2) rotate(4,21,108)">
-              <rect width="42" height="178" rx="2" fill="#2a7848" stroke="#081a10" stroke-width="1"/>
-              <circle cx="21" cy="89" r="16" fill="#1a5030" stroke="#081410" stroke-width="1"/>
-              <circle cx="21" cy="89" r="5"  fill="#081408"/>
-              <circle cx="21" cy="89" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
-            <!-- Record 3 — deep purple -->
-            <g transform="translate(106,8) rotate(-3,21,108)">
-              <rect width="42" height="168" rx="2" fill="#7a2a88" stroke="#140818" stroke-width="1"/>
-              <circle cx="21" cy="84" r="16" fill="#521860" stroke="#0e0810" stroke-width="1"/>
-              <circle cx="21" cy="84" r="5"  fill="#0e0810"/>
-              <circle cx="21" cy="84" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
-            <!-- Record 4 — cobalt blue -->
-            <g transform="translate(148,4) rotate(5,21,108)">
-              <rect width="42" height="175" rx="2" fill="#1e4a8a" stroke="#080c1a" stroke-width="1"/>
-              <circle cx="21" cy="87" r="16" fill="#143268" stroke="#080c14" stroke-width="1"/>
-              <circle cx="21" cy="87" r="5"  fill="#080c14"/>
-              <circle cx="21" cy="87" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
-            <!-- Record 5 — burnt sienna -->
-            <g transform="translate(190,10) rotate(-4,21,108)">
-              <rect width="42" height="165" rx="2" fill="#b86020" stroke="#180c08" stroke-width="1"/>
-              <circle cx="21" cy="82" r="16" fill="#804018" stroke="#140c08" stroke-width="1"/>
-              <circle cx="21" cy="82" r="5"  fill="#140c08"/>
-              <circle cx="21" cy="82" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
-            <!-- Record 6 — slate blue-grey -->
-            <g transform="translate(232,6) rotate(3,21,108)">
-              <rect width="42" height="170" rx="2" fill="#4a5878" stroke="#0c1018" stroke-width="1"/>
-              <circle cx="21" cy="85" r="16" fill="#303c58" stroke="#0c1018" stroke-width="1"/>
-              <circle cx="21" cy="85" r="5"  fill="#0c1018"/>
-              <circle cx="21" cy="85" r="2"  fill="#c8a060" opacity="0.6"/>
-            </g>
+  <!-- ── VINYL DISC ── -->
+  <g filter="url(#rec-shadow)">
+    <!-- Main disc body -->
+    <circle cx="150" cy="150" r="138" fill="url(#vinyl-body)"/>
 
-            <!-- Bottom shadow -->
-            <rect x="14" y="198" width="272" height="20" fill="rgba(0,0,0,0.6)"/>
-            <!-- Crate bottom edge -->
-            <rect x="6" y="216" width="288" height="8" rx="2" fill="#4a3418" stroke="#6a4e28" stroke-width="1"/>
-          </svg>
+    <!-- Concentric groove rings — many thin rings simulate vinyl grooves -->
+    <g clip-path="url(#disc-clip)" opacity="0.55">
+      <!-- Outer grooved area -->
+      <circle cx="150" cy="150" r="135" fill="none" stroke="#1e1c18" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="132" fill="none" stroke="#222018" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="129" fill="none" stroke="#1a1816" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="126" fill="none" stroke="#201e1a" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="123" fill="none" stroke="#1c1a16" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="120" fill="none" stroke="#222018" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="117" fill="none" stroke="#1a1816" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="114" fill="none" stroke="#1e1c18" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="111" fill="none" stroke="#201e1a" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="108" fill="none" stroke="#1c1a16" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="105" fill="none" stroke="#1e1c18" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="102" fill="none" stroke="#222018" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="99"  fill="none" stroke="#1a1816" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="96"  fill="none" stroke="#1e1c18" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="93"  fill="none" stroke="#201e1a" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="90"  fill="none" stroke="#1c1a16" stroke-width="0.6"/>
+      <circle cx="150" cy="150" r="87"  fill="none" stroke="#1e1c18" stroke-width="0.8"/>
+      <circle cx="150" cy="150" r="84"  fill="none" stroke="#222018" stroke-width="0.6"/>
+      <!-- Lead-out groove gap (slightly wider dark band before label) -->
+      <circle cx="150" cy="150" r="80"  fill="none" stroke="#0c0a08" stroke-width="4"/>
+    </g>
+
+    <!-- Groove light sheen overlay -->
+    <circle cx="150" cy="150" r="138" fill="url(#groove-sheen)"/>
+    <circle cx="150" cy="150" r="138" fill="url(#edge-spec)"/>
+
+    <!-- ── LABEL ── -->
+    <!-- Label background -->
+    <circle cx="150" cy="150" r="52" fill="url(#label-bg)"/>
+    <!-- Label texture rings -->
+    <circle cx="150" cy="150" r="50" fill="none" stroke="rgba(120,80,20,0.4)" stroke-width="0.5"/>
+    <circle cx="150" cy="150" r="46" fill="none" stroke="rgba(100,70,15,0.3)" stroke-width="0.5"/>
+    <!-- Label inner ring -->
+    <circle cx="150" cy="150" r="40" fill="none" stroke="rgba(180,130,50,0.35)" stroke-width="1"/>
+    <!-- Label text -->
+    <text x="150" y="140" text-anchor="middle" font-family="'Cormorant Garamond', serif"
+          font-style="italic" font-size="10" fill="rgba(40,20,5,0.9)" letter-spacing="0.5">Blind Spin</text>
+    <text x="150" y="152" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
+          font-size="5.5" fill="rgba(40,20,5,0.6)" letter-spacing="1.5">SIDE A</text>
+    <text x="150" y="163" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
+          font-size="4.5" fill="rgba(40,20,5,0.5)" letter-spacing="0.8">RANDOM RELEASE</text>
+    <!-- Spindle hole -->
+    <circle cx="150" cy="150" r="5" fill="#0a0808"/>
+    <circle cx="150" cy="150" r="3" fill="#141210"/>
+    <circle cx="150" cy="150" r="1.5" fill="#0a0808"/>
+
+    <!-- Outer edge ring (slight raised rim) -->
+    <circle cx="150" cy="150" r="138" fill="none" stroke="#3a3228" stroke-width="1.5"/>
+    <circle cx="150" cy="150" r="136" fill="none" stroke="#0a0808" stroke-width="1"/>
+  </g>
+</svg>
         </div>
         <div class="empty-title">Blind Spin</div>
         <div class="empty-sub">Press spin or hit spacebar</div>
