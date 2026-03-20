@@ -1126,7 +1126,7 @@ async function loadStore() {
     container.innerHTML = '';
 
     if (!results.length) {
-      container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:'IBM Plex Mono',monospace;">no results</div>';
+      container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
     } else {
       results.forEach(r => {
         const s = makeSleeve(r);
