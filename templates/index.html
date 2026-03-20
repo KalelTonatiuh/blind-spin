@@ -743,15 +743,22 @@
 
   /* ── SLEEVE POPOVER ── */
   .sleeve-popover {
-    position: absolute; bottom: 250px; left: 50%; transform: translateX(-50%) translateY(8px);
-    width: 220px; z-index: 20;
-    background: linear-gradient(to bottom, #1e180c, #141008);
-    border: 1px solid #4a3818;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(200,160,64,0.1);
-    padding: 12px; border-radius: 3px;
-    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    position: fixed; z-index: 2000;
+    width: 240px;
+    background: linear-gradient(to bottom, #241c0e, #161008);
+    border: 1px solid #5a4020;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 0 1px rgba(200,160,64,0.15),
+      inset 0 1px 0 rgba(255,200,80,0.08);
+    padding: 14px; border-radius: 2px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    transform: translateY(6px);
+    /* Aged paper texture */
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0, transparent 18px, rgba(180,140,60,0.04) 18px, rgba(180,140,60,0.04) 19px),
+      linear-gradient(to bottom, #241c0e, #161008);
   }
-  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateY(0); }
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -825,6 +832,64 @@
     .cbot { padding: 16px 18px 20px; }
     .fbar.open { max-height: 260px; }
     .fbar-inner { gap: 8px 14px; }
+  }
+
+  /* ── TAG COLOR VARIANTS — aged sticker per genre family ── */
+  /* rust — rock/metal: terracotta */
+  .gt-rust {
+    background: linear-gradient(to bottom, #c8604a, #a84030) !important;
+    border-color: #7a2818 !important; border-bottom-color: #3a1008 !important;
+    color: #f8e0d8 !important; text-shadow: 0 1px 0 rgba(80,20,10,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,180,160,0.3) !important;
+  }
+  /* rose — pop/indie: dusty rose */
+  .gt-rose {
+    background: linear-gradient(to bottom, #b87888, #9a5868) !important;
+    border-color: #6a3848 !important; border-bottom-color: #2a1820 !important;
+    color: #f8e8ec !important; text-shadow: 0 1px 0 rgba(60,20,30,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,210,0.3) !important;
+  }
+  /* teal — electronic: aged teal */
+  .gt-teal {
+    background: linear-gradient(to bottom, #3a7880, #286068) !important;
+    border-color: #184848 !important; border-bottom-color: #082020 !important;
+    color: #d8f0f0 !important; text-shadow: 0 1px 0 rgba(10,40,40,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,240,240,0.2) !important;
+  }
+  /* slate — jazz/blues: worn blue-grey */
+  .gt-slate {
+    background: linear-gradient(to bottom, #5870a8, #405890) !important;
+    border-color: #283870 !important; border-bottom-color: #101830 !important;
+    color: #e0e8f8 !important; text-shadow: 0 1px 0 rgba(20,30,60,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(180,200,255,0.2) !important;
+  }
+  /* olive — folk/classical: aged olive */
+  .gt-olive {
+    background: linear-gradient(to bottom, #7a8840, #607030) !important;
+    border-color: #404820 !important; border-bottom-color: #181c08 !important;
+    color: #f0f0d8 !important; text-shadow: 0 1px 0 rgba(30,35,10,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(220,230,160,0.25) !important;
+  }
+  /* ochre — hip-hop: warm ochre */
+  .gt-ochre {
+    background: linear-gradient(to bottom, #c89830, #a87818) !important;
+    border-color: #785010 !important; border-bottom-color: #302008 !important;
+    color: #fff8e0 !important; text-shadow: 0 1px 0 rgba(60,40,0,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.3) !important;
+  }
+  /* forest — reggae/ska: deep forest */
+  .gt-forest {
+    background: linear-gradient(to bottom, #387848, #286038) !important;
+    border-color: #184828 !important; border-bottom-color: #081e10 !important;
+    color: #d8f0e0 !important; text-shadow: 0 1px 0 rgba(10,30,15,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,240,180,0.2) !important;
+  }
+  /* plum — experimental: deep plum */
+  .gt-plum {
+    background: linear-gradient(to bottom, #785888, #603870) !important;
+    border-color: #402850 !important; border-bottom-color: #180e20 !important;
+    color: #f0e0f8 !important; text-shadow: 0 1px 0 rgba(40,20,50,0.5) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(220,180,255,0.2) !important;
   }
 </style>
 </head>
@@ -1930,13 +1995,32 @@ function makeSleeve(r) {
   // Single click: show popover. Double click or popover button: open full card
   div.addEventListener('click', (e) => {
     if (e.target.closest('.sleeve-open-btn')) { toggleStore(); openStoreRelease(r); return; }
-    // Toggle popover
-    document.querySelectorAll('.sleeve-popover').forEach(p => {
-      if (!p.closest('.sleeve').contains(e.target)) p.classList.remove('vis');
+    // Close all other popovers
+    document.querySelectorAll('.sleeve-popover.vis').forEach(p => {
+      if (p !== div.querySelector('.sleeve-popover')) p.classList.remove('vis');
     });
     const pop = div.querySelector('.sleeve-popover');
-    if (pop) pop.classList.toggle('vis');
+    if (!pop) return;
+    const wasVis = pop.classList.contains('vis');
+    pop.classList.remove('vis');
+    if (!wasVis) {
+      // Position popover above the sleeve using fixed coords
+      const rect = div.getBoundingClientRect();
+      const pw = 240;
+      let left = rect.left + rect.width / 2 - pw / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+      const top = Math.max(8, rect.top - 280);
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+      pop.classList.add('vis');
+    }
   });
+  // Close popover on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.sleeve')) {
+      document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
+    }
+  }, { capture: true, once: false });
 
   return div;
 }
@@ -1996,6 +2080,26 @@ async function refreshShelf(genre) {
   } else {
     results.forEach(r => container.appendChild(makeSleeve(r)));
   }
+}
+
+// ── TAG COLORS ───────────────────────────────────────────────────────────────────
+const TAG_COLORS = {
+  // Genre families
+  rock: 'rust', punk: 'rust', metal: 'rust', grunge: 'rust', hardcore: 'rust',
+  pop: 'rose', indie: 'rose', 'synth-pop': 'rose', 'dream pop': 'rose', shoegaze: 'rose',
+  electronic: 'teal', ambient: 'teal', techno: 'teal', house: 'teal', idm: 'teal', drone: 'teal',
+  jazz: 'slate', blues: 'slate', soul: 'slate', funk: 'slate', 'r&b': 'slate',
+  classical: 'olive', folk: 'olive', acoustic: 'olive', country: 'olive', bluegrass: 'olive',
+  'hip-hop': 'ochre', rap: 'ochre', 'hip hop': 'ochre', trap: 'ochre',
+  reggae: 'forest', ska: 'forest', dub: 'forest', afrobeat: 'forest',
+  experimental: 'plum', noise: 'plum', avant: 'plum', psychedelic: 'plum',
+};
+function tagColor(tag) {
+  const t = tag.toLowerCase();
+  for (const [key, color] of Object.entries(TAG_COLORS)) {
+    if (t.includes(key)) return color;
+  }
+  return 'default';
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
