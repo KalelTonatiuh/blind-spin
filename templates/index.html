@@ -1201,6 +1201,13 @@ function log(msg, t='ok') {
 }
 function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
 
+// ── GLOBAL CLICK — close popovers when clicking outside sleeves ──────────────
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.sleeve')) {
+    document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
+  }
+});
+
 // ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.code === 'Space' && !e.target.matches('input,select,textarea,button')) {
@@ -2022,43 +2029,46 @@ function makeSleeve(r) {
         <div class="sleeve-year">${esc(r.year || '')} ${esc(r.country || '')}</div>
       </div>
     </div>
-    <div class="sleeve-popover">
-      <div class="sp-artist">${esc(r.artist)}</div>
-      <div class="sp-title">${esc(r.title)}</div>
-      <div class="sp-meta">${esc(r.year||'')}${r.country?' · '+esc(r.country):''}${r.genre?' · '+esc(r.genre):''}</div>
-      ${(r.tags||[]).slice(0,4).map(t=>`<span class="sp-tag">${esc(t)}</span>`).join('')}
-      <button class="sleeve-open-btn">Open full record ↗</button>
-    </div>`;
+`;
 
   // Single click: show popover. Double click or popover button: open full card
   div.addEventListener('click', (e) => {
     if (e.target.closest('.sleeve-open-btn')) { toggleStore(); openStoreRelease(r); return; }
+    e.stopPropagation();
     // Close all other popovers
-    document.querySelectorAll('.sleeve-popover.vis').forEach(p => {
-      if (p !== div.querySelector('.sleeve-popover')) p.classList.remove('vis');
+    document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
+    // Find or create body-level popover for this sleeve
+    let pop = document.getElementById('active-sleeve-pop');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'active-sleeve-pop';
+      pop.className = 'sleeve-popover';
+      document.body.appendChild(pop);
+    }
+    // Build popover content
+    pop.innerHTML = `
+      <div class="sp-artist">${esc(r.artist)}</div>
+      <div class="sp-title">${esc(r.title)}</div>
+      <div class="sp-meta">${esc(r.year||'')}${r.country?' · '+esc(r.country):''}${r.genre?' · '+esc(r.genre):''}</div>
+      ${(r.tags||[]).slice(0,4).map(t=>`<span class="sp-tag">${esc(t)}</span>`).join('')}
+      <button class="sleeve-open-btn" id="pop-open-btn">Open full record ↗</button>`;
+    pop.querySelector('#pop-open-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      pop.classList.remove('vis');
+      toggleStore();
+      openStoreRelease(r);
     });
-    const pop = div.querySelector('.sleeve-popover');
-    if (!pop) return;
-    const wasVis = pop.classList.contains('vis');
-    pop.classList.remove('vis');
-    if (!wasVis) {
-      // Position popover above the sleeve using fixed coords
-      const rect = div.getBoundingClientRect();
-      const pw = 240;
-      let left = rect.left + rect.width / 2 - pw / 2;
-      left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-      const top = Math.max(8, rect.top - 280);
-      pop.style.left = left + 'px';
-      pop.style.top = top + 'px';
-      pop.classList.add('vis');
-    }
+    // Position above the sleeve
+    const rect = div.getBoundingClientRect();
+    const pw = 240;
+    let left = rect.left + rect.width / 2 - pw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    const top = Math.max(8, rect.top - 290);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.classList.add('vis');
   });
-  // Close popover on outside click
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.sleeve')) {
-      document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
-    }
-  }, { capture: true, once: false });
+
 
   return div;
 }
