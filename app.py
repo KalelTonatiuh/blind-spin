@@ -159,6 +159,7 @@ def discogs_random():
 
     # Read optional filters
     f_genre    = request.args.get("genre", "")
+    f_style    = request.args.get("style", "")
     f_year_from = request.args.get("year_from", "")
     f_year_to   = request.args.get("year_to", "")
     f_country  = request.args.get("country", "")
@@ -174,7 +175,7 @@ def discogs_random():
         year_q = f"1900-{f_year_to}"
 
     # With filters, page range is smaller since result set is narrower
-    has_filters = any([f_genre, year_q, f_country, f_format])
+    has_filters = any([f_genre, f_style, year_q, f_country, f_format])
     page = random.randint(1, 200 if has_filters else 5000)
 
     search_url = f"{DISCOGS_BASE}/database/search"
@@ -186,6 +187,7 @@ def discogs_random():
 
     # Apply filters
     if f_genre:   params["genre"]   = f_genre
+    if f_style:   params["style"]   = f_style
     if year_q:    params["year"]    = year_q
     if f_country: params["country"] = f_country
     if f_format:  params["format"]  = f_format

@@ -598,20 +598,18 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     transform-origin: bottom center;
     overflow: visible;
-    /* Cast shadow down onto shelf */
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
   }
-  .sleeve:hover { transform: translateY(-16px) rotate(-1.5deg); z-index: 5; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.8)); }
+  .sleeve:hover { transform: translateY(-16px) rotate(-1.5deg); z-index: 5; }
   .sleeve:hover .sleeve-info { opacity: 1; }
 
   /* The sleeve itself — cardboard edge effect */
   .sleeve-inner {
-    width: 100%; height: 100%; position: relative; overflow: visible;
+    width: 100%; height: 100%; position: relative; overflow: hidden;
     box-shadow:
       2px 0 0 #1a0f05,
       4px 2px 0 #0d0805,
       -1px 0 4px rgba(0,0,0,0.5),
-      0 4px 16px rgba(0,0,0,0.7);
+      0 6px 20px rgba(0,0,0,0.8);
   }
 
   /* Spine strip on left edge */
@@ -787,7 +785,7 @@
     position: absolute;
     bottom: calc(100% + 10px);
     left: 50%;
-    z-index: 100;
+    z-index: 9999;
     width: 220px;
     background: linear-gradient(to bottom, #241c0e, #161008);
     border: 1px solid #5a4020;
@@ -2047,7 +2045,17 @@ async function loadStore() {
     const results = [];
     const promises = Array(5).fill(0).map(async () => {
       try {
-        const params = new URLSearchParams({ genre });
+        // Map store genres to Discogs genre/style params
+        const GENRE_MAP = {
+          'Metal': { genre: 'Rock', style: 'Metal' },
+          'Blues': { genre: 'Blues' },
+          'Reggae': { genre: 'Reggae' },
+          'Pop': { genre: 'Pop' },
+          'Funk / Soul': { genre: 'Funk / Soul' },
+          'Folk, World, & Country': { genre: 'Folk, World, & Country' },
+        };
+        const mapping = GENRE_MAP[genre] || { genre };
+        const params = new URLSearchParams(mapping);
         const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
         if (data.artist && data.title) results.push(data);
       } catch {}
