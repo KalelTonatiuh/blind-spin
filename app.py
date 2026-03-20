@@ -297,11 +297,11 @@ def wiki_artist():
         search_r = session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
-                "action": "query",
-                "list":   "search",
-                "srsearch": f"{artist} musician OR band",
-                "srlimit": 3,
-                "format": "json",
+                "action":   "query",
+                "list":     "search",
+                "srsearch": f'"{artist}" band OR musician OR singer OR artist OR discography',
+                "srlimit":  5,
+                "format":   "json",
             },
             headers={"User-Agent": "BlindSpin/1.0"},
             timeout=8, verify=False
@@ -311,14 +311,26 @@ def wiki_artist():
         if not results:
             return jsonify({"blurb": None})
 
-        title = results[0]["title"]
+        # Validate result title actually contains the artist name (case-insensitive)
+        # This prevents "Canister (album)" or unrelated articles matching
+        artist_lower = artist.lower()
+        title = None
+        for res in results:
+            t = res["title"]
+            snippet = res.get("snippet", "").lower()
+            # Accept if: title starts with artist name, or snippet mentions them prominently
+            if t.lower().startswith(artist_lower) or artist_lower in t.lower():
+                title = t
+                break
+        if not title:
+            return jsonify({"blurb": None})
 
         # Fetch extract
         extract_r = session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
                 "action":      "query",
-                "prop":        "extracts",
+                "prop":        "extracts|categories",
                 "exintro":     True,
                 "explaintext": True,
                 "exsentences": 3,
@@ -333,7 +345,14 @@ def wiki_artist():
         page  = next(iter(pages.values()), {})
         extract = page.get("extract", "").strip()
 
-        if not extract or len(extract) < 30:
+        # Reject if extract describes something clearly non-musical
+        NON_MUSIC = ["is a film", "is a television", "is a novel", "is a video game",
+                     "is a software", "is a company", "is a town", "is a city",
+                     "is a chemical", "is a type of"]
+        if any(phrase in extract.lower() for phrase in NON_MUSIC):
+            return jsonify({"blurb": None})
+
+        if not extract or len(extract) < 40:
             return jsonify({"blurb": None})
 
         return jsonify({"blurb": extract, "wiki_title": title})
