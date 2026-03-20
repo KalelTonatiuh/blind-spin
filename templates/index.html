@@ -408,7 +408,7 @@ async function mbViaProxy(f={}) {
       data = await apiFetch(`/api/mb/release-groups?offset=${offset}`, 'mb');
     } catch(e) {
       log(`[mb] fetch failed: ${e.message}`, 'warn');
-      await sleep(400);
+      await sleep(800);
       continue;
     }
 
@@ -417,7 +417,7 @@ async function mbViaProxy(f={}) {
     const rg = pickGroup(groups, f);
     if (rg) { log(`[mb] picked: "${rg.artist}" — "${rg.title}"`, 'ok'); return rg; }
     log(`[mb] all filtered, retrying...`, 'dim');
-    await sleep(300);
+    await sleep(600);
   }
   throw new Error('could not find a suitable release-group after ' + MAX_TRIES + ' attempts');
 }

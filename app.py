@@ -2,11 +2,29 @@ import os
 import random
 import requests
 import urllib3
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from flask import Flask, request, jsonify, render_template
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
+
+# Persistent session with retry logic for flaky SSL on Railway
+def make_session():
+    s = requests.Session()
+    retry = Retry(
+        total=3,
+        backoff_factor=0.3,
+        status_forcelist=[500, 502, 503, 504],
+        allowed_methods=["GET", "POST"],
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+    s.mount("https://", adapter)
+    s.mount("http://", adapter)
+    return s
+
+session = make_session()
 
 MB_BASE      = "https://musicbrainz.org/ws/2"
 CAA_BASE     = "https://coverartarchive.org"
@@ -33,7 +51,7 @@ def mb_release_groups():
     offset = request.args.get("offset", 0, type=int)
     url = f"{MB_BASE}/release-group?query=*&limit=5&offset={offset}&fmt=json"
     try:
-        r = requests.get(url, headers=HEADERS, timeout=10, verify=False)
+        r = session.get(url, headers=HEADERS, timeout=10, verify=False)
         r.raise_for_status()
         return jsonify(r.json())
     except requests.exceptions.HTTPError as e:
@@ -46,7 +64,7 @@ def mb_release_group_detail(mbid):
     # Hardcode inc to avoid URL encoding issues with +
     url = f"{MB_BASE}/release-group/{mbid}?inc=tags%2Bgenres&fmt=json"
     try:
-        r = requests.get(url, headers=HEADERS, timeout=6, verify=False)
+        r = session.get(url, headers=HEADERS, timeout=6, verify=False)
         r.raise_for_status()
         return jsonify(r.json())
     except requests.exceptions.HTTPError as e:
@@ -62,7 +80,7 @@ def caa_release_group(mbid):
     for scheme in ("https", "http"):
         url = f"{scheme}://coverartarchive.org/release-group/{mbid}"
         try:
-            r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True, verify=False)
+            r = session.get(url, headers=HEADERS, timeout=10, allow_redirects=True, verify=False)
             if r.status_code == 404:
                 return jsonify({"images": []}), 404
             if r.status_code == 200:
@@ -94,7 +112,7 @@ def discogs_cover():
     }
 
     try:
-        r = requests.get(
+        r = session.get(
             f"{DISCOGS_BASE}/database/search",
             headers=dg_headers,
             params={"q": f"{artist} {title}", "type": "release", "per_page": 3, "page": 1},
@@ -165,10 +183,10 @@ def discogs_random():
         params["format"] = "album"  # default to albums/EPs when no format filter
 
     try:
-        r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
+        r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
         if r.status_code == 404:
             params["page"] = random.randint(1, 50 if has_filters else 500)
-            r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
+            r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
         if r.status_code == 429:
             return jsonify({"error": "discogs rate limited"}), 429
         r.raise_for_status()
@@ -287,7 +305,7 @@ def ia_random():
     }
 
     try:
-        r = requests.get(
+        r = session.get(
             f"{IA_BASE}/advancedsearch.php",
             params=params,
             headers=HEADERS,
