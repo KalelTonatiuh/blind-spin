@@ -46,7 +46,7 @@ def mb_release_group_detail(mbid):
     # Hardcode inc to avoid URL encoding issues with +
     url = f"{MB_BASE}/release-group/{mbid}?inc=tags%2Bgenres&fmt=json"
     try:
-        r = requests.get(url, headers=HEADERS, timeout=10, verify=False)
+        r = requests.get(url, headers=HEADERS, timeout=6, verify=False)
         r.raise_for_status()
         return jsonify(r.json())
     except requests.exceptions.HTTPError as e:

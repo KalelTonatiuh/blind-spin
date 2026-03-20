@@ -227,7 +227,7 @@ async function spin() {
       rg.tags = await fetchTags(rg.mbid);
 
       log('fetching cover...', 'dim');
-      rg.cover = await fetchCoverUrl(rg.mbid);
+      rg.cover = await fetchCoverUrl(rg.mbid, rg.artist, rg.title);
       log(rg.cover ? 'cover found' : 'no cover', rg.cover ? 'ok' : 'dim');
     }
 
@@ -343,19 +343,30 @@ async function fetchTags(mbid) {
 }
 
 // ── Cover art ─────────────────────────────────────────────────────────────────
-async function fetchCoverUrl(mbid) {
+async function fetchCoverUrl(mbid, artist, title) {
+  // Try CAA first — fetch directly, don't throw on 404
   try {
-    const data = await apiFetch(`/api/caa/release-group/${mbid}`, 'cover');
+    const resp = await fetch(`/api/caa/release-group/${mbid}`);
+    const data = await resp.json();
     const front = (data.images||[]).find(i => i.front);
-    if (!front) { log('[cover] no front image', 'dim'); return null; }
-    const url = front.thumbnails?.['250'] || front.thumbnails?.small || front.image;
-    if (!url) { log('[cover] no usable URL', 'dim'); return null; }
-    log(`[cover] ${url.slice(0,60)}...`, 'ok');
-    return url;
+    if (front) {
+      const url = front.thumbnails?.['250'] || front.thumbnails?.small || front.image;
+      if (url) { log(`[cover] caa ok`, 'ok'); return url; }
+    }
+    log('[cover] caa: no front image', 'dim');
   } catch(e) {
-    log(`[cover] ${e.message}`, 'dim');
-    return null;
+    log(`[cover] caa failed: ${e.message}`, 'dim');
   }
+  // Fallback: Discogs image search
+  log('[cover] trying discogs fallback...', 'dim');
+  try {
+    const q = encodeURIComponent(artist) + '&title=' + encodeURIComponent(title);
+    const data = await apiFetch(`/api/discogs/cover?artist=${q}`, 'cover');
+    if (data.cover) { log('[cover] discogs fallback ok', 'ok'); return data.cover; }
+  } catch(e) {
+    log(`[cover] discogs fallback failed: ${e.message}`, 'dim');
+  }
+  return null;
 }
 
 // ── Pick group ────────────────────────────────────────────────────────────────
