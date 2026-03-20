@@ -58,17 +58,18 @@ def mb_release_group_detail(mbid):
 
 @app.route("/api/caa/release-group/<mbid>")
 def caa_release_group(mbid):
-    url = f"{CAA_BASE}/release-group/{mbid}"
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True, verify=False)
-        if r.status_code == 404:
-            return jsonify({"images": []}), 404
-        r.raise_for_status()
-        return jsonify(r.json())
-    except requests.exceptions.HTTPError as e:
-        return jsonify({"error": str(e)}), r.status_code
-    except Exception as e:
-        return jsonify({"error": str(e)}), 502
+    # Try HTTPS first, fall back to HTTP (Railway has SSL issues with CAA)
+    for scheme in ("https", "http"):
+        url = f"{scheme}://coverartarchive.org/release-group/{mbid}"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True, verify=False)
+            if r.status_code == 404:
+                return jsonify({"images": []}), 404
+            if r.status_code == 200:
+                return jsonify(r.json())
+        except Exception:
+            continue
+    return jsonify({"images": []}), 404
 
 # ── Discogs proxy ─────────────────────────────────────────────────────────────
 
