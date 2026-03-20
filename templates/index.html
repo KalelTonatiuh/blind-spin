@@ -138,7 +138,7 @@
 
   <div class="hdr">
     <div class="wm">Blind Spin</div>
-    <div class="hdr-sub">random release · musicbrainz · bandcamp · no cultural weighting</div>
+    <div class="hdr-sub">random release · musicbrainz · discogs · no cultural weighting</div>
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
     </button>
@@ -149,7 +149,7 @@
       <div class="empty" id="empty">
         <div class="e1">press spin to pull a random release</div>
         <div class="e2"></div>
-        <div class="e3">sources: musicbrainz (2.8m releases, random offset) · bandcamp (dig_deeper, random genre/page)</div>
+        <div class="e3">sources: musicbrainz (2.8m releases) · discogs (15m releases) · random offset, no weighting</div>
         <div class="e3" style="margin-top:4px">strategy: coin-flip between sources each spin · no cultural weighting</div>
       </div>
 
@@ -211,13 +211,13 @@ async function spin() {
   log('spin started', 'info');
 
   try {
-    const useBandcamp = Math.random() < 0.5;
-    log(`source: ${useBandcamp ? 'bandcamp' : 'musicbrainz'}`, 'info');
+    const useDiscogs = Math.random() < 0.5;
+    log(`source: ${useDiscogs ? 'discogs' : 'musicbrainz'}`, 'info');
 
     let rg;
-    if (useBandcamp) {
-      rg = await bcViaProxy();
-      log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}/${rg.subgenre}] ${rg.year}`, 'ok');
+    if (useDiscogs) {
+      rg = await discogsViaProxy();
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
       rg = await mbViaProxy();
@@ -283,27 +283,27 @@ async function mbViaProxy() {
   throw new Error('could not find a suitable release-group after ' + MAX_TRIES + ' attempts');
 }
 
-// ── BC: pick a random release via dig_deeper ──────────────────────────────────
-async function bcViaProxy() {
+// ── Discogs: pick a random release ───────────────────────────────────────────
+async function discogsViaProxy() {
   const MAX_TRIES = 5;
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
-    log(`[bc] attempt ${attempt+1}`, 'dim');
+    log(`[dg] attempt ${attempt+1}`, 'dim');
     let data;
     try {
-      data = await apiFetch('/api/bc/random', 'bc');
+      data = await apiFetch('/api/discogs/random', 'dg');
     } catch(e) {
-      log(`[bc] fetch failed: ${e.message}`, 'warn');
+      log(`[dg] fetch failed: ${e.message}`, 'warn');
       await sleep(400);
       continue;
     }
     if (!data.artist || !data.title) {
-      log('[bc] empty result, retrying...', 'dim');
+      log('[dg] empty result, retrying...', 'dim');
       await sleep(300);
       continue;
     }
-    log(`[bc] genre=${data.genre} subgenre=${data.subgenre}`, 'dim');
+    log(`[dg] genre=${data.genre} label=${data.label||'?'}`, 'dim');
     return {
-      source:    'bandcamp',
+      source:    'discogs',
       artist:    data.artist,
       title:     data.title,
       url:       data.url,
@@ -312,13 +312,13 @@ async function bcViaProxy() {
       year:      data.year  || '',
       type:      data.type  || 'album',
       genre:     data.genre || '',
-      subgenre:  data.subgenre || '',
+      label:     data.label || '',
+      country:   data.country || '',
       mbid:      null,
       secondaryTypes: [],
-      country: '',
     };
   }
-  throw new Error('could not get a Bandcamp result after ' + MAX_TRIES + ' attempts');
+  throw new Error('could not get a Discogs result after ' + MAX_TRIES + ' attempts');
 }
 
 // ── Tags ──────────────────────────────────────────────────────────────────────
@@ -396,7 +396,7 @@ function render(r) {
     covEl.innerHTML = '<div class="cnone">no art</div>';
   }
 
-  document.getElementById('csrc').textContent = r.source === 'bandcamp' ? 'bandcamp.com' : 'musicbrainz.org';
+  document.getElementById('csrc').textContent = r.source === 'discogs' ? 'discogs.com' : 'musicbrainz.org';
   document.getElementById('cart').textContent = r.artist;
   document.getElementById('ctit').textContent = r.title;
 
@@ -405,9 +405,9 @@ function render(r) {
   pills.innerHTML = '';
   if (r.year)    pills.innerHTML += pill(r.year);
   if (r.type)    pills.innerHTML += pill(r.type, 'hi');
-  if (r.source === 'bandcamp') {
+  if (r.source === 'discogs') {
     if (r.genre)    pills.innerHTML += pill(r.genre);
-    if (r.subgenre) pills.innerHTML += pill(r.subgenre);
+    if (r.country)  pills.innerHTML += pill(r.country);
   } else {
     if (r.country) pills.innerHTML += pill(r.country);
     for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
@@ -435,8 +435,8 @@ function render(r) {
   const ytUrl  = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.artist+' '+r.title+' full album')}`;
 
   let sourceLink = '';
-  if (r.source === 'bandcamp' && r.url) {
-    sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Bandcamp ↗</a>`;
+  if (r.source === 'discogs' && r.url) {
+    sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Discogs ↗</a>`;
   } else if (r.mbid) {
     const mbUrl = `https://musicbrainz.org/release-group/${r.mbid}`;
     sourceLink = `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>`;

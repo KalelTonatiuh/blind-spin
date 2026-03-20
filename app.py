@@ -8,29 +8,17 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
-MB_BASE  = "https://musicbrainz.org/ws/2"
-CAA_BASE = "https://coverartarchive.org"
-BC_API   = "https://bandcamp.com/api/hub/2/dig_deeper"
-BC_TAG_API = "https://bandcamp.com/api/tag/1/releases"
+MB_BASE      = "https://musicbrainz.org/ws/2"
+CAA_BASE     = "https://coverartarchive.org"
+DISCOGS_BASE = "https://api.discogs.com"
+
+DISCOGS_TOKEN = os.environ.get("DISCOGS_TOKEN", "")
+DISCOGS_TOTAL = 15000000  # ~15M releases in Discogs
 
 HEADERS = {
     "User-Agent": "BlindSpin/1.0 (https://github.com/KalelTonatiuh/blind-spin; contact@example.com)",
     "Accept": "application/json",
 }
-
-# Bandcamp genre/subgenre pool for dig_deeper
-BC_GENRES = [
-    {"genre": "electronic", "subgenres": ["ambient", "techno", "house", "experimental", "drone", "noise", "industrial", "synth", "idm", "dub"]},
-    {"genre": "rock",       "subgenres": ["indie", "punk", "metal", "alternative", "post-rock", "shoegaze", "psychedelic", "garage", "emo", "folk-punk"]},
-    {"genre": "metal",      "subgenres": ["black-metal", "death-metal", "doom", "sludge", "grindcore", "post-metal", "thrash", "heavy-metal"]},
-    {"genre": "folk",       "subgenres": ["singer-songwriter", "acoustic", "americana", "country", "bluegrass", "celtic"]},
-    {"genre": "jazz",       "subgenres": ["jazz", "avant-garde", "free-jazz", "soul-jazz"]},
-    {"genre": "classical",  "subgenres": ["contemporary-classical", "minimalism", "orchestral", "chamber"]},
-    {"genre": "hip-hop-rap","subgenres": ["hip-hop", "rap", "lo-fi", "instrumental-hip-hop"]},
-    {"genre": "r-b-soul",   "subgenres": ["soul", "r-b", "funk", "gospel"]},
-    {"genre": "pop",        "subgenres": ["indie-pop", "dream-pop", "synth-pop", "art-pop", "lo-fi-pop"]},
-    {"genre": "world",      "subgenres": ["latin", "reggae", "afrobeat", "cumbia", "ska", "dub"]},
-]
 
 # ── Pages ─────────────────────────────────────────────────────────────────────
 
@@ -82,104 +70,79 @@ def caa_release_group(mbid):
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
-# ── Bandcamp proxy ────────────────────────────────────────────────────────────
+# ── Discogs proxy ─────────────────────────────────────────────────────────────
 
-@app.route("/api/bc/random")
-def bc_random():
+@app.route("/api/discogs/random")
+def discogs_random():
     """
-    Scrapes a Bandcamp tag page and extracts the embedded JSON (window.BC_data / data-blob).
-    No API key or session token needed — this is exactly what the browser sees.
+    Picks a random release from Discogs using a random page offset.
+    Filters to albums/EPs only, then fetches full release details for cover art.
     """
-    genre_entry = random.choice(BC_GENRES)
-    genre       = genre_entry["genre"]
-    tag         = random.choice(genre_entry["subgenres"])
-    page        = random.randint(1, 5)
+    if not DISCOGS_TOKEN:
+        return jsonify({"error": "DISCOGS_TOKEN not set"}), 500
 
-    url = f"https://bandcamp.com/tag/{tag}?sort_field=date&page={page}"
+    dg_headers = {
+        "User-Agent": "BlindSpin/1.0 (https://github.com/KalelTonatiuh/blind-spin)",
+        "Authorization": f"Discogs token={DISCOGS_TOKEN}",
+        "Accept": "application/json",
+    }
 
-    bc_headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
+    # Random page across the release database
+    # Discogs search returns max 100 per page; ~150k pages gets us deep coverage
+    page = random.randint(1, 100000)
+
+    search_url = f"{DISCOGS_BASE}/database/search"
+    params = {
+        "type":     "release",
+        "format":   "album",   # covers LP, EP, etc.
+        "per_page": 10,
+        "page":     page,
     }
 
     try:
-        r = requests.get(url, headers=bc_headers, timeout=15)
-        if r.status_code != 200:
-            return jsonify({"error": f"bc page returned {r.status_code}", "tag": tag}), 404
-        html = r.text
+        r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
+        if r.status_code == 429:
+            return jsonify({"error": "discogs rate limited"}), 429
+        r.raise_for_status()
+        data = r.json()
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
-    # BC embeds all hub data as JSON in a <div data-client-items="..."> or inside a script
-    import re, json, html as htmllib
+    results = data.get("results", [])
+    if not results:
+        return jsonify({"error": "no results", "page": page}), 404
 
-    items = []
+    item = random.choice(results)
 
-    # Try: <div class="discover-result" data-blob="...">
-    m = re.search(r'data-blob="([^"]+)"', html)
-    if m:
-        try:
-            blob = json.loads(htmllib.unescape(m.group(1)))
-            items = blob.get("items", [])
-        except Exception:
-            pass
+    # Parse artist/title — Discogs title field is usually "Artist - Title"
+    raw_title = item.get("title", "")
+    if " - " in raw_title:
+        artist, title = raw_title.split(" - ", 1)
+    else:
+        artist = ""
+        title  = raw_title
 
-    # Try: embedded JSON in <script> — BC puts hub data as a JS variable
-    if not items:
-        m = re.search(r'var\s+(?:hub|BC_PAGE_DATA|pagedata)\s*=\s*(\{.+?\});\s*\n', html, re.DOTALL)
-        if m:
-            try:
-                blob = json.loads(m.group(1))
-                items = blob.get("items", blob.get("hub", {}).get("items", []))
-            except Exception:
-                pass
-
-    # Try: data-client-items attribute
-    if not items:
-        m = re.search(r'data-client-items="([^"]+)"', html)
-        if m:
-            try:
-                items = json.loads(htmllib.unescape(m.group(1)))
-            except Exception:
-                pass
-
-    if not items:
-        # Return a snippet of the HTML so we can see what's actually there
-        snippet = re.sub(r'<[^>]+>', ' ', html[:2000]).strip()[:500]
-        return jsonify({"error": "could not parse bc page", "tag": tag, "page": page, "snippet": snippet}), 404
-
-    item = random.choice(items)
-
-    artist = item.get("band_name") or item.get("artist") or ""
-    title  = item.get("title", "")
-    url_   = item.get("tralbum_url") or item.get("item_url") or ""
-    art    = item.get("art_url") or ""
-    if art and "_10." in art:
-        art = art.replace("_10.", "_16.")
-
-    tags = []
-    for t in item.get("tags", []):
-        if isinstance(t, str):
-            tags.append(t)
-        elif isinstance(t, dict):
-            tags.append(t.get("norm_name") or t.get("name") or "")
-    tags = [t for t in tags if t]
-
-    release_date = item.get("release_date") or ""
-    year = str(release_date)[:4] if release_date else ""
+    year   = str(item.get("year", ""))
+    genres = item.get("genre", [])
+    styles = item.get("style", [])
+    tags   = list(dict.fromkeys(genres + styles))[:10]  # dedupe, genres first
+    cover  = item.get("cover_image") or item.get("thumb") or ""
+    url_   = f"https://www.discogs.com{item['uri']}" if item.get("uri") else ""
+    fmt    = (item.get("format") or [""])[0] if item.get("format") else ""
 
     return jsonify({
-        "source":   "bandcamp",
-        "artist":   artist,
-        "title":    title,
-        "url":      url_,
-        "cover":    art,
-        "tags":     tags[:10],
-        "year":     year,
-        "type":     item.get("type", "album"),
-        "genre":    genre,
-        "subgenre": tag,
+        "source": "discogs",
+        "artist": artist.strip(),
+        "title":  title.strip(),
+        "url":    url_,
+        "cover":  cover,
+        "tags":   tags,
+        "year":   year,
+        "type":   fmt or "album",
+        "genre":  genres[0] if genres else "",
+        "label":  (item.get("label") or [""])[0],
+        "country": item.get("country", ""),
+        "catno":  item.get("catno", ""),
     })
 
 # ── Run ───────────────────────────────────────────────────────────────────────
