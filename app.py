@@ -90,7 +90,7 @@ def discogs_random():
 
     # Random page across the release database
     # Discogs search returns max 100 per page; ~150k pages gets us deep coverage
-    page = random.randint(1, 100000)
+    page = random.randint(1, 5000)
 
     search_url = f"{DISCOGS_BASE}/database/search"
     params = {
@@ -102,6 +102,9 @@ def discogs_random():
 
     try:
         r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
+        if r.status_code == 404:
+            params["page"] = random.randint(1, 500)
+            r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
         if r.status_code == 429:
             return jsonify({"error": "discogs rate limited"}), 429
         r.raise_for_status()
