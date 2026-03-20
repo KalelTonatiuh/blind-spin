@@ -125,6 +125,49 @@
 
   .note { font-size: 0.58rem; color: var(--muted); margin-top: 14px; padding: 8px 10px; border: 1px dashed var(--border); line-height: 1.6; }
 
+
+  /* ── FILTER PANEL ── */
+  .fbar {
+    flex-shrink: 0; border-bottom: 1px solid var(--border);
+    overflow: hidden; transition: max-height 0.2s ease;
+    max-height: 0;
+  }
+  .fbar.open { max-height: 160px; }
+  .fbar-inner { padding: 10px 18px 12px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .flbl { font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .finp, .fsel {
+    background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem;
+    padding: 4px 7px; outline: none; min-width: 80px;
+  }
+  .finp:focus, .fsel:focus { border-color: var(--accent-dim); }
+  .finp::placeholder { color: var(--muted); }
+  .fsel option { background: var(--surface2); }
+  .fyear { display: flex; gap: 5px; align-items: center; }
+  .fyear span { font-size: 0.56rem; color: var(--muted); }
+  .fyear .finp { width: 54px; }
+
+  .fbar-reset {
+    font-size: 0.56rem; color: var(--muted); background: none; border: none;
+    cursor: pointer; font-family: inherit; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 0; align-self: flex-end;
+  }
+  .fbar-reset:hover { color: var(--text); }
+
+  .filter-btn {
+    flex-shrink: 0; background: none; border: 1px solid var(--border2); color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 7px 12px; cursor: pointer;
+    transition: border-color 0.1s, color 0.1s;
+  }
+  .filter-btn:hover, .filter-btn.on { border-color: var(--accent-dim); color: var(--accent-dim); }
+
+  @media (max-width: 680px) {
+    .fbar.open { max-height: 260px; }
+    .fbar-inner { gap: 8px 14px; }
+  }
   /* mobile */
   @media (max-width: 680px) {
     .body { grid-template-columns: 1fr; grid-template-rows: 1fr 210px; }
@@ -139,9 +182,59 @@
   <div class="hdr">
     <div class="wm">Blind Spin</div>
     <div class="hdr-sub">random release · musicbrainz · discogs · no cultural weighting</div>
+    <button class="filter-btn" id="filterbtn" onclick="toggleFilters()">Filters</button>
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
     </button>
+  </div>
+
+  <div class="fbar" id="fbar">
+    <div class="fbar-inner">
+      <div class="fg">
+        <label class="flbl">source</label>
+        <select class="fsel" id="f-source">
+          <option value="">both</option>
+          <option value="discogs">discogs</option>
+          <option value="mb">musicbrainz</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flbl">genre</label>
+        <select class="fsel" id="f-genre">
+          <option value="">any</option>
+          <option>Rock</option><option>Electronic</option><option>Jazz</option>
+          <option>Classical</option><option>Hip Hop</option><option>Folk, World, & Country</option>
+          <option>Funk / Soul</option><option>Latin</option><option>Reggae</option>
+          <option>Pop</option><option>Blues</option><option>Stage & Screen</option>
+          <option>Children's</option><option>Non-Music</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flbl">year</label>
+        <div class="fyear">
+          <input class="finp" id="f-year-from" type="number" placeholder="from" min="1900" max="2025">
+          <span>–</span>
+          <input class="finp" id="f-year-to" type="number" placeholder="to" min="1900" max="2025">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flbl">country</label>
+        <input class="finp" id="f-country" type="text" placeholder="e.g. US, UK, DE" style="width:90px">
+      </div>
+      <div class="fg">
+        <label class="flbl">format</label>
+        <select class="fsel" id="f-format">
+          <option value="">any</option>
+          <option value="Vinyl">Vinyl</option>
+          <option value="CD">CD</option>
+          <option value="Cassette">Cassette</option>
+          <option value="Album">LP</option>
+          <option value="EP">EP</option>
+          <option value="Digital">Digital</option>
+        </select>
+      </div>
+      <button class="fbar-reset" onclick="resetFilters()">reset</button>
+    </div>
   </div>
 
   <div class="body">
@@ -199,6 +292,28 @@ function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
 
 // ── NOTE: constants defined below in mbViaProxy section ─────────────────────────────────────────────────────────────────────
 
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+function getFilters() {
+  return {
+    source:    document.getElementById('f-source').value,
+    genre:     document.getElementById('f-genre').value,
+    yearFrom:  document.getElementById('f-year-from').value,
+    yearTo:    document.getElementById('f-year-to').value,
+    country:   document.getElementById('f-country').value.trim().toUpperCase(),
+    format:    document.getElementById('f-format').value,
+  };
+}
+function toggleFilters() {
+  const fb = document.getElementById('fbar');
+  const btn = document.getElementById('filterbtn');
+  const open = fb.classList.toggle('open');
+  btn.classList.toggle('on', open);
+}
+function resetFilters() {
+  ['f-source','f-genre','f-format'].forEach(id => document.getElementById(id).value = '');
+  ['f-year-from','f-year-to','f-country'].forEach(id => document.getElementById(id).value = '');
+}
+
 // ── SPIN ─────────────────────────────────────────────────────────────────────
 let busy = false;
 async function spin() {
@@ -209,18 +324,25 @@ async function spin() {
   hideCard(); clrLog();
 
   log('spin started', 'info');
+  const f = getFilters();
+  if (Object.values(f).some(v => v)) log(`filters: ${JSON.stringify(f)}`, 'dim');
 
   try {
-    const useDiscogs = Math.random() < 0.5;
+    // Determine source from filter or coin flip
+    let useDiscogs;
+    if (f.source === 'discogs') useDiscogs = true;
+    else if (f.source === 'mb') useDiscogs = false;
+    else useDiscogs = Math.random() < 0.5;
+
     log(`source: ${useDiscogs ? 'discogs' : 'musicbrainz'}`, 'info');
 
     let rg;
     if (useDiscogs) {
-      rg = await discogsViaProxy();
+      rg = await discogsViaProxy(f);
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
-      rg = await mbViaProxy();
+      rg = await mbViaProxy(f);
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
 
       log('fetching tags...', 'dim');
@@ -258,7 +380,7 @@ async function apiFetch(url, logLabel) {
 }
 
 // ── MB: pick a random release-group ──────────────────────────────────────────
-async function mbViaProxy() {
+async function mbViaProxy(f={}) {
   const MAX_TRIES = 8;
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
     const offset = Math.floor(Math.random() * MB_TOTAL);
@@ -275,7 +397,7 @@ async function mbViaProxy() {
 
     const groups = data['release-groups'] || [];
     log(`[mb] parsed ${groups.length} groups`, 'dim');
-    const rg = pickGroup(groups);
+    const rg = pickGroup(groups, f);
     if (rg) { log(`[mb] picked: "${rg.artist}" — "${rg.title}"`, 'ok'); return rg; }
     log(`[mb] all filtered, retrying...`, 'dim');
     await sleep(300);
@@ -284,13 +406,20 @@ async function mbViaProxy() {
 }
 
 // ── Discogs: pick a random release ───────────────────────────────────────────
-async function discogsViaProxy() {
+async function discogsViaProxy(f={}) {
   const MAX_TRIES = 5;
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
     log(`[dg] attempt ${attempt+1}`, 'dim');
     let data;
     try {
-      data = await apiFetch('/api/discogs/random', 'dg');
+      const params = new URLSearchParams();
+      if (f.genre)    params.set('genre', f.genre);
+      if (f.yearFrom) params.set('year_from', f.yearFrom);
+      if (f.yearTo)   params.set('year_to', f.yearTo);
+      if (f.country)  params.set('country', f.country);
+      if (f.format)   params.set('format', f.format);
+      const qs = params.toString() ? '?' + params.toString() : '';
+      data = await apiFetch('/api/discogs/random' + qs, 'dg');
     } catch(e) {
       log(`[dg] fetch failed: ${e.message}`, 'warn');
       await sleep(400);
@@ -370,15 +499,20 @@ async function fetchCoverUrl(mbid, artist, title) {
 }
 
 // ── Pick group ────────────────────────────────────────────────────────────────
-function pickGroup(groups) {
+function pickGroup(groups, f={}) {
   const shuffled = [...groups].sort(() => Math.random() - 0.5);
+  const yFrom = f.yearFrom ? parseInt(f.yearFrom) : 1930;
+  const yTo   = f.yearTo   ? parseInt(f.yearTo)   : 9999;
   for (const g of shuffled) {
     const pt = (g['primary-type']||'').toLowerCase();
     const st = (g['secondary-types']||[]).map(s=>s.toLowerCase());
     if (!GOOD_TYPES.has(pt)) continue;
     if ([pt,...st].some(t => BAD_TYPES.has(t))) continue;
+    // Format filter for MB: map EP/LP
+    if (f.format === 'EP' && pt !== 'ep') continue;
+    if (f.format === 'Album' && pt !== 'album') continue;
     const year = parseInt((g['first-release-date']||'').slice(0,4));
-    if (year > 0 && year < 1930) continue;
+    if (year > 0 && (year < yFrom || year > yTo)) continue;
     const credits = g['artist-credit']||[];
     const artist = credits.map(c => typeof c === 'string' ? c : (c.artist?.name||'')).join('').trim();
     if (!artist || !g.title) continue;

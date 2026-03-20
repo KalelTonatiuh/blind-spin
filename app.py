@@ -118,7 +118,7 @@ def discogs_cover():
 def discogs_random():
     """
     Picks a random release from Discogs using a random page offset.
-    Filters to albums/EPs only, then fetches full release details for cover art.
+    Accepts optional filter params: genre, year_from, year_to, country, format.
     """
     if not DISCOGS_TOKEN:
         return jsonify({"error": "DISCOGS_TOKEN not set"}), 500
@@ -129,22 +129,45 @@ def discogs_random():
         "Accept": "application/json",
     }
 
-    # Random page across the release database
-    # Discogs search returns max 100 per page; ~150k pages gets us deep coverage
-    page = random.randint(1, 5000)
+    # Read optional filters
+    f_genre    = request.args.get("genre", "")
+    f_year_from = request.args.get("year_from", "")
+    f_year_to   = request.args.get("year_to", "")
+    f_country  = request.args.get("country", "")
+    f_format   = request.args.get("format", "")
+
+    # Build year range query string for Discogs
+    year_q = ""
+    if f_year_from and f_year_to:
+        year_q = f"{f_year_from}-{f_year_to}"
+    elif f_year_from:
+        year_q = f"{f_year_from}-2025"
+    elif f_year_to:
+        year_q = f"1900-{f_year_to}"
+
+    # With filters, page range is smaller since result set is narrower
+    has_filters = any([f_genre, year_q, f_country, f_format])
+    page = random.randint(1, 200 if has_filters else 5000)
 
     search_url = f"{DISCOGS_BASE}/database/search"
     params = {
         "type":     "release",
-        "format":   "album",   # covers LP, EP, etc.
         "per_page": 10,
         "page":     page,
     }
 
+    # Apply filters
+    if f_genre:   params["genre"]   = f_genre
+    if year_q:    params["year"]    = year_q
+    if f_country: params["country"] = f_country
+    if f_format:  params["format"]  = f_format
+    if not f_format:
+        params["format"] = "album"  # default to albums/EPs when no format filter
+
     try:
         r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
         if r.status_code == 404:
-            params["page"] = random.randint(1, 500)
+            params["page"] = random.randint(1, 50 if has_filters else 500)
             r = requests.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
         if r.status_code == 429:
             return jsonify({"error": "discogs rate limited"}), 429
