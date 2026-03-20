@@ -501,9 +501,15 @@
 
   .store-hdr {
     flex-shrink: 0; display: flex; align-items: center; gap: 16px;
-    padding: 14px 28px; border-bottom: 2px solid #3d2a0e;
-    background: linear-gradient(to bottom, #2a1c08, #1a1208);
+    padding: 14px 28px; border-bottom: 3px solid #3d2a0e;
+    background:
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 6px,
+        rgba(0,0,0,0.05) 6px, rgba(0,0,0,0.05) 7px
+      ),
+      linear-gradient(to bottom, #2e2010, #1a1208);
     position: sticky; top: 0; z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.07);
   }
   .store-title {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -521,7 +527,15 @@
   .store-body { padding: 0 0 40px; }
 
   /* Shelf row */
-  .shelf-row { margin-bottom: 0; position: relative; }
+  .shelf-row {
+    margin-bottom: 0; position: relative;
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 40px,
+        rgba(0,0,0,0.06) 40px, rgba(0,0,0,0.06) 41px
+      ),
+      linear-gradient(to bottom, #120e08, #0e0a06);
+  }
 
   .shelf-label {
     font-size: 0.52rem; letter-spacing: 0.28em; text-transform: uppercase;
@@ -791,8 +805,14 @@
   .sleeve-open-btn:hover { background: linear-gradient(to bottom, #3a2e18, #2a2010); }
 
   /* ── SHELF LABEL ROW ── */
-  .shelf-label-row { display: flex; align-items: center; padding: 22px 28px 6px; }
-  .shelf-label { font-size: 0.52rem; letter-spacing: 0.28em; text-transform: uppercase; color: #7a5c30; font-family: 'IBM Plex Mono', monospace; flex: 1; }
+  .shelf-label-row { display: flex; align-items: center; padding: 18px 28px 8px; }
+  .shelf-label {
+    font-size: 0.5rem; letter-spacing: 0.32em; text-transform: uppercase;
+    color: #6a5028; font-family: 'IBM Plex Mono', monospace; flex: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 20px rgba(180,120,40,0.1);
+    /* Stencilled look — slightly uneven */
+    opacity: 0.85;
+  }
   .shelf-refresh {
     background: none; border: 1px solid #3a2a14; color: #4a3820;
     font-size: 0.7rem; width: 22px; height: 22px; cursor: pointer;
@@ -2063,12 +2083,19 @@ function makeSleeve(r) {
       toggleStore();
       openStoreRelease(r);
     });
-    // Position above the sleeve
+    // Position above the sleeve — clamp to viewport
     const rect = div.getBoundingClientRect();
-    const pw = 240;
+    const pw = 240, ph = 200;
     let left = rect.left + rect.width / 2 - pw / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-    const top = Math.max(8, rect.top - 290);
+    // If not enough room above, show below
+    let top;
+    if (rect.top > ph + 20) {
+      top = rect.top - ph - 12;
+    } else {
+      top = rect.bottom + 12;
+    }
+    top = Math.max(8, Math.min(top, window.innerHeight - ph - 8));
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
     pop.classList.add('vis');
