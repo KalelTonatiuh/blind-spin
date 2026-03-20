@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blind Spin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap');
+
+  :root {
+    --bg: #0c0c0a; --surface: #131310; --surface2: #181814;
+    --border: #252520; --border2: #2e2e28;
+    --muted: #484840; --text: #e2dfd6; --sub: #7a7870;
+    --accent: #bfa96a; --accent-dim: #8c7d4e;
+    --green: #6a9e6a; --red: #9e6a6a; --amber: #b89040; --link: #7a9ab5;
+    --cbg: #070707; --cok: #4a8a4a; --cerr: #9e5a5a; --cinfo: #4a6a9e; --cwarn: #9e8040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; height: 100%; }
+
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  .hdr {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 11px 18px; border-bottom: 1px solid var(--border);
+  }
+  .wm { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.5rem; color: var(--accent); line-height: 1; flex-shrink: 0; }
+  .hdr-sub { font-size: 0.56rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .spin-btn {
+    flex-shrink: 0; background: none; border: 1px solid var(--accent); color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 7px 18px; cursor: pointer;
+    transition: background 0.1s, color 0.1s; display: flex; align-items: center; gap: 7px;
+  }
+  .spin-btn:hover:not(:disabled) { background: var(--accent); color: var(--bg); }
+  .spin-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .sp { width: 9px; height: 9px; border: 1.5px solid currentColor; border-top-color: transparent; border-radius: 50%; display: none; animation: rot 0.65s linear infinite; }
+  .spin-btn.ld .sp { display: block; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  .body { flex: 1; display: grid; grid-template-columns: 1fr 300px; overflow: hidden; }
+
+  .main { overflow-y: auto; padding: 18px; border-right: 1px solid var(--border); }
+
+  /* ── CONSOLE ── */
+  .con { display: flex; flex-direction: column; background: var(--cbg); overflow: hidden; }
+  .con-hdr { flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 8px 12px; border-bottom: 1px solid #111; }
+  .cdot { width: 5px; height: 5px; border-radius: 50%; background: #1c1c1c; flex-shrink: 0; transition: background 0.2s; }
+  .cdot.on { background: var(--cok); }
+  .cdot.er { background: var(--cerr); }
+  .con-title { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: #222; flex: 1; }
+  .con-clr { font-size: 0.56rem; color: #222; background: none; border: none; cursor: pointer; font-family: inherit; letter-spacing: 0.1em; text-transform: uppercase; }
+  .con-clr:hover { color: #555; }
+  #log { flex: 1; overflow-y: auto; padding: 7px 11px 10px; font-size: 0.6rem; line-height: 1.6; scrollbar-width: thin; scrollbar-color: #111 transparent; }
+  .ll { display: flex; gap: 7px; }
+  .lt { color: #1e1e1e; flex-shrink: 0; font-size: 0.57rem; min-width: 46px; }
+  .lm { flex: 1; word-break: break-all; }
+  .ll.ok   .lm { color: var(--cok); }
+  .ll.info .lm { color: var(--cinfo); }
+  .ll.warn .lm { color: var(--cwarn); }
+  .ll.err  .lm { color: var(--cerr); }
+  .ll.dim  .lm { color: #252525; }
+  .ll.raw  .lm { color: #1a2a1a; font-size: 0.52rem; }
+
+  /* ── EMPTY ── */
+  .empty { padding-top: 24px; }
+  .e1 { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.07em; margin-bottom: 7px; }
+  .e2 { height: 1px; background: var(--border); margin-bottom: 7px; }
+  .e3 { font-size: 0.56rem; color: #202020; letter-spacing: 0.05em; }
+
+  /* ── CARD ── */
+  .card { display: none; }
+  .card.on { display: block; animation: fu 0.25s ease; }
+  @keyframes fu { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+
+  .ctop { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+  .cov { width: 90px; height: 90px; flex-shrink: 0; border: 1px solid var(--border2); background: var(--surface); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .cov img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 5px; }
+
+  .cmeta { flex: 1; min-width: 0; }
+  .csrc { font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-dim); margin-bottom: 3px; }
+  .cart { font-size: 0.66rem; color: var(--sub); letter-spacing: 0.04em; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ctit { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; line-height: 1.15; color: var(--text); margin-bottom: 8px; word-break: break-word; }
+  .cpills { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pill { font-size: 0.56rem; padding: 2px 6px; border: 1px solid var(--border2); color: var(--sub); letter-spacing: 0.05em; }
+  .pill.hi { border-color: var(--accent-dim); color: var(--accent-dim); }
+
+  .sec { margin-bottom: 18px; }
+  .sec:last-child { margin-bottom: 0; }
+  .slbl { font-size: 0.54rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+  .slbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .grow, .drow { display: flex; flex-wrap: wrap; gap: 4px; }
+  .gt { font-size: 0.61rem; padding: 2px 7px; border: 1px solid var(--border2); color: var(--sub); letter-spacing: 0.03em; }
+  .gt.p { border-color: var(--accent-dim); color: var(--accent); }
+  .dt { font-size: 0.57rem; color: var(--muted); letter-spacing: 0.02em; }
+  .dt::before { content: '·'; margin-right: 4px; }
+
+  .srow { display: flex; gap: 9px; flex-wrap: wrap; }
+  .sb { border: 1px solid var(--border); padding: 8px 10px; background: var(--surface2); min-width: 70px; }
+  .sv { font-size: 0.9rem; color: var(--text); display: block; margin-bottom: 1px; }
+  .sv.g { color: var(--green); } .sv.m { color: var(--amber); } .sv.b { color: var(--red); }
+  .sl { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; display: block; }
+
+  .tlist { border: 1px solid var(--border); }
+  .tr { display: flex; gap: 8px; align-items: baseline; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 0.63rem; }
+  .tr:last-child { border-bottom: none; }
+  .tn { color: var(--muted); min-width: 15px; text-align: right; flex-shrink: 0; }
+  .tt { flex: 1; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .td { color: var(--muted); font-size: 0.58rem; flex-shrink: 0; }
+
+  .lrow { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 13px; border-top: 1px solid var(--border); }
+  .el { font-size: 0.62rem; color: var(--link); text-decoration: none; letter-spacing: 0.04em; border-bottom: 1px solid transparent; transition: border-color 0.1s; }
+  .el:hover { border-color: var(--link); }
+
+  .note { font-size: 0.58rem; color: var(--muted); margin-top: 14px; padding: 8px 10px; border: 1px dashed var(--border); line-height: 1.6; }
+
+  /* mobile */
+  @media (max-width: 680px) {
+    .body { grid-template-columns: 1fr; grid-template-rows: 1fr 210px; }
+    .main { border-right: none; border-bottom: 1px solid var(--border); }
+    .hdr-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hdr">
+    <div class="wm">Blind Spin</div>
+    <div class="hdr-sub">random release · musicbrainz + coverartarchive · rym link</div>
+    <button class="spin-btn" id="btn" onclick="spin()">
+      <span class="sp"></span><span>Spin</span>
+    </button>
+  </div>
+
+  <div class="body">
+    <div class="main">
+      <div class="empty" id="empty">
+        <div class="e1">press spin to pull a random release</div>
+        <div class="e2"></div>
+        <div class="e3">source: musicbrainz browse api (random offset) + coverartarchive.org</div>
+        <div class="e3" style="margin-top:4px">strategy: truly random offset across 2.8m releases · no cultural weighting</div>
+      </div>
+
+      <div class="card" id="card">
+        <div class="ctop">
+          <div class="cov" id="cov"><div class="cnone">no art</div></div>
+          <div class="cmeta">
+            <div class="csrc" id="csrc"></div>
+            <div class="cart" id="cart"></div>
+            <div class="ctit" id="ctit"></div>
+            <div class="cpills" id="cpills"></div>
+          </div>
+        </div>
+        <div class="sec" id="ssec" style="display:none"><div class="slbl">stats</div><div class="srow" id="srow"></div></div>
+        <div class="sec" id="gsec" style="display:none"><div class="slbl">genres / tags</div><div class="grow" id="grow"></div></div>
+        <div class="sec" id="dsec" style="display:none"><div class="slbl">tracklist</div><div class="tlist" id="tlist"></div></div>
+        <div class="lrow" id="lrow"></div>
+        <div class="note" id="note" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="con">
+      <div class="con-hdr">
+        <div class="cdot" id="cdot"></div>
+        <div class="con-title">debug console</div>
+        <button class="con-clr" onclick="clrLog()">clear</button>
+      </div>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── LOG ───────────────────────────────────────────────────────────────────────
+const logEl = document.getElementById('log');
+const cdot  = document.getElementById('cdot');
+function ts() { const d=new Date(); return `${h2(d.getHours())}:${h2(d.getMinutes())}:${h2(d.getSeconds())}`; }
+function h2(n) { return String(n).padStart(2,'0'); }
+function log(msg, t='ok') {
+  const d=document.createElement('div'); d.className=`ll ${t}`;
+  d.innerHTML=`<span class="lt">${ts()}</span><span class="lm">${esc(String(msg))}</span>`;
+  logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight;
+  if(t==='err') cdot.className='cdot er';
+  else if(!cdot.classList.contains('er')) cdot.className='cdot on';
+}
+function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
+
+// ── NOTE: constants defined below in mbViaProxy section ─────────────────────────────────────────────────────────────────────
+
+// ── SPIN ─────────────────────────────────────────────────────────────────────
+let busy = false;
+async function spin() {
+  if (busy) return;
+  busy = true;
+  const btn = document.getElementById('btn');
+  btn.classList.add('ld'); btn.disabled = true;
+  hideCard(); clrLog();
+
+  log('spin started', 'info');
+
+  try {
+    const rg = await mbViaProxy();
+    log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
+
+    log('fetching tags...', 'dim');
+    rg.tags = await fetchTags(rg.mbid);
+
+    log('fetching cover...', 'dim');
+    rg.cover = await fetchCoverUrl(rg.mbid);
+    log(rg.cover ? 'cover found' : 'no cover', rg.cover ? 'ok' : 'dim');
+
+    render(rg);
+  } catch(e) {
+    log(`FATAL: ${e.message}`, 'err');
+  }
+
+  btn.classList.remove('ld'); btn.disabled = false;
+  busy = false;
+}
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const MB_TOTAL = 2800000;
+const BAD_TYPES  = new Set(['bootleg','promotional','interview','spokenword','audiobook','audio drama','other','dj-mix','mixtape/street','single','broadcast']);
+const GOOD_TYPES = new Set(['album','ep']);
+
+// ── FETCH via local Flask proxy ───────────────────────────────────────────────
+async function apiFetch(url, logLabel) {
+  log(`[${logLabel}] GET ${url}`, 'dim');
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+// ── MB: pick a random release-group ──────────────────────────────────────────
+async function mbViaProxy() {
+  const MAX_TRIES = 8;
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    const offset = Math.floor(Math.random() * MB_TOTAL);
+    log(`[mb] attempt ${attempt+1}, offset=${offset}`, 'dim');
+
+    let data;
+    try {
+      data = await apiFetch(`/api/mb/release-groups?offset=${offset}`, 'mb');
+    } catch(e) {
+      log(`[mb] fetch failed: ${e.message}`, 'warn');
+      await sleep(400);
+      continue;
+    }
+
+    const groups = data['release-groups'] || [];
+    log(`[mb] parsed ${groups.length} groups`, 'dim');
+    const rg = pickGroup(groups);
+    if (rg) { log(`[mb] picked: "${rg.artist}" — "${rg.title}"`, 'ok'); return rg; }
+    log(`[mb] all filtered, retrying...`, 'dim');
+    await sleep(300);
+  }
+  throw new Error('could not find a suitable release-group after ' + MAX_TRIES + ' attempts');
+}
+
+// ── Tags ──────────────────────────────────────────────────────────────────────
+async function fetchTags(mbid) {
+  try {
+    const data = await apiFetch(`/api/mb/release-group/${mbid}?inc=tags+genres`, 'tags');
+    const tags   = (data.tags   || []).map(t => ({ name: t.name, count: t.count || 0 }));
+    const genres = (data.genres || []).map(g => ({ name: g.name, count: g.count || 0 }));
+    const seen = new Set();
+    const merged = [...genres, ...tags].filter(t => {
+      if (seen.has(t.name)) return false;
+      seen.add(t.name); return true;
+    });
+    merged.sort((a,b) => b.count - a.count);
+    const names = merged.slice(0,10).map(t=>t.name).filter(Boolean);
+    log(`[tags] ${names.length} tags: ${names.join(', ')||'none'}`, names.length ? 'ok' : 'dim');
+    return names;
+  } catch(e) {
+    log(`[tags] err: ${e.message}`, 'warn');
+    return [];
+  }
+}
+
+// ── Cover art ─────────────────────────────────────────────────────────────────
+async function fetchCoverUrl(mbid) {
+  try {
+    const data = await apiFetch(`/api/caa/release-group/${mbid}`, 'cover');
+    const front = (data.images||[]).find(i => i.front);
+    if (!front) { log('[cover] no front image', 'dim'); return null; }
+    const url = front.thumbnails?.['250'] || front.thumbnails?.small || front.image;
+    if (!url) { log('[cover] no usable URL', 'dim'); return null; }
+    log(`[cover] ${url.slice(0,60)}...`, 'ok');
+    return url;
+  } catch(e) {
+    log(`[cover] ${e.message}`, 'dim');
+    return null;
+  }
+}
+
+// ── Pick group ────────────────────────────────────────────────────────────────
+function pickGroup(groups) {
+  const shuffled = [...groups].sort(() => Math.random() - 0.5);
+  for (const g of shuffled) {
+    const pt = (g['primary-type']||'').toLowerCase();
+    const st = (g['secondary-types']||[]).map(s=>s.toLowerCase());
+    if (!GOOD_TYPES.has(pt)) continue;
+    if ([pt,...st].some(t => BAD_TYPES.has(t))) continue;
+    const year = parseInt((g['first-release-date']||'').slice(0,4));
+    if (year > 0 && year < 1930) continue;
+    const credits = g['artist-credit']||[];
+    const artist = credits.map(c => typeof c === 'string' ? c : (c.artist?.name||'')).join('').trim();
+    if (!artist || !g.title) continue;
+    return {
+      mbid:   g.id,
+      artist,
+      title:  g.title,
+      type:   g['primary-type'] || '',
+      year:   (g['first-release-date']||'').slice(0,4),
+      tags:   (g.tags||[]).map(t=>t.name).filter(Boolean),
+      secondaryTypes: g['secondary-types']||[],
+      country: '',
+      label: '',
+    };
+  }
+  return null;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(r) {
+  // Cover
+  const covEl = document.getElementById('cov');
+  if (r.cover) {
+    covEl.innerHTML = `<img src="${escA(r.cover)}" alt="cover" onerror="this.parentElement.innerHTML='<div class=\\'cnone\\'>no art</div>'">`;
+  } else {
+    covEl.innerHTML = '<div class="cnone">no art</div>';
+  }
+
+  document.getElementById('csrc').textContent = 'musicbrainz.org';
+  document.getElementById('cart').textContent = r.artist;
+  document.getElementById('ctit').textContent = r.title;
+
+  // Pills
+  const pills = document.getElementById('cpills');
+  pills.innerHTML = '';
+  if (r.year)    pills.innerHTML += pill(r.year);
+  if (r.type)    pills.innerHTML += pill(r.type, 'hi');
+  if (r.country) pills.innerHTML += pill(r.country);
+  for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
+
+  // Stats — just MB link count for now
+  document.getElementById('ssec').style.display = 'none';
+
+  // Tags/genres
+  const gsec = document.getElementById('gsec');
+  const grow = document.getElementById('grow');
+  const tags = (r.tags||[]).slice(0, 12);
+  if (tags.length) {
+    grow.innerHTML = tags.map((t,i) => `<span class="gt${i===0?' p':''}">${esc(t)}</span>`).join('');
+    gsec.style.display = 'block';
+  } else { gsec.style.display = 'none'; }
+
+  // No tracklist from release-group endpoint (would need extra call)
+  document.getElementById('dsec').style.display = 'none';
+
+  // Links
+  const lrow = document.getElementById('lrow');
+  const mbUrl  = `https://musicbrainz.org/release-group/${r.mbid}`;
+  const rymQ   = encodeURIComponent(r.artist + ' ' + r.title);
+  const rymUrl = `https://rateyourmusic.com/search?searchterm=${rymQ}&searchtype=l`;
+  const ytUrl  = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.artist+' '+r.title+' full album')}`;
+
+  lrow.innerHTML =
+    (r.mbid ? `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>` : '') +
+    `<a class="el" href="${escA(rymUrl)}" target="_blank" rel="noopener">Search RYM ↗</a>
+    <a class="el" href="${escA(ytUrl)}"  target="_blank" rel="noopener">YouTube ↗</a>`;
+
+  // Note
+  const note = document.getElementById('note');
+  note.style.display = 'none';
+
+  showCard();
+  log('rendered.', 'ok');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function tryJSON(s) {
+  if (!s) return null;
+  s = s.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim();
+  const a=s.indexOf('{'), b=s.lastIndexOf('}');
+  if (a<0||b<0) return null;
+  try { return JSON.parse(s.slice(a,b+1)); } catch { return null; }
+}
+function pill(t, cls='') { return `<span class="pill ${cls}">${esc(t)}</span>`; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function showCard() {
+  document.getElementById('empty').style.display='none';
+  const c=document.getElementById('card');
+  c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');
+}
+function hideCard() {
+  document.getElementById('empty').style.display='block';
+  document.getElementById('card').classList.remove('on');
+}
+</script>
+</body>
+</html>
