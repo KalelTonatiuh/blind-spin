@@ -83,43 +83,41 @@ def caa_release_group(mbid):
 
 @app.route("/api/bc/random")
 def bc_random():
-    """
-    Uses Bandcamp's tag/1/releases endpoint (powers the /tag/ browse pages).
-    More reliable than dig_deeper. Returns a normalized release object.
-    """
     genre_entry = random.choice(BC_GENRES)
     genre       = genre_entry["genre"]
     tag         = random.choice(genre_entry["subgenres"])
-    page        = random.randint(1, 15)
+    page        = random.randint(1, 8)
 
     bc_headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; BlindSpin/1.0)",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json",
+        "Content-Type": "application/json",
         "Referer": f"https://bandcamp.com/tag/{tag}",
+        "Origin": "https://bandcamp.com",
     }
 
-    params = {
+    payload = {
         "tag_norm_name": tag,
         "page":          page,
-        "sort_field":    "date",    # newest first → more obscure
+        "sort_field":    "date",
         "format":        "music",
+        "include_result_types": ["a", "t"],  # albums and tracks
     }
 
     try:
-        r = requests.get(BC_TAG_API, params=params, headers=bc_headers, timeout=12)
-        status = r.status_code
-        if status != 200:
-            # surface the actual BC response for debugging
-            try:
-                body = r.json()
-            except Exception:
-                body = r.text[:300]
-            return jsonify({"error": f"bandcamp returned {status}", "tag": tag, "page": page, "bc_response": body}), 404
+        r = requests.post(BC_TAG_API, json=payload, headers=bc_headers, timeout=12)
         data = r.json()
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
-    # Dump top-level keys so we can see the real structure if items is wrong
+    # BC returns 200 even on errors — check for error payload
+    if "error" in data and "items" not in data and "releases" not in data:
+        return jsonify({
+            "error": "bc rejected request",
+            "bc_error": data.get("error_message", data.get("error", "unknown")),
+            "tag": tag, "page": page
+        }), 404
+
     items = data.get("items") or data.get("releases") or data.get("results") or []
     if not items:
         return jsonify({"error": "no items", "tag": tag, "page": page, "keys": list(data.keys())}), 404
