@@ -350,8 +350,6 @@ async function spin() {
         rg = await discogsViaProxy(f);
         log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
         log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
-        render(rg);
-        return;
       }
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
 
