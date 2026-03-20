@@ -342,7 +342,17 @@ async function spin() {
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
-      rg = await mbViaProxy(f);
+      try {
+        rg = await mbViaProxy(f);
+      } catch(mbErr) {
+        if (f.source === 'mb') throw mbErr; // user explicitly wants MB, surface the error
+        log(`[mb] all attempts failed, falling back to discogs`, 'warn');
+        rg = await discogsViaProxy(f);
+        log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
+        log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+        render(rg);
+        return;
+      }
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
 
       log('fetching tags...', 'dim');
