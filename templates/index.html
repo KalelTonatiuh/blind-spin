@@ -509,6 +509,7 @@
       ),
       linear-gradient(to bottom, #2e2010, #1a1208);
     position: sticky; top: 0; z-index: 10;
+    filter: url(#wood-grain-dark);
     box-shadow: 0 2px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.07);
   }
   .store-title {
@@ -774,8 +775,8 @@
 
   /* ── SLEEVE POPOVER ── */
   .sleeve-popover {
-    position: fixed; z-index: 2000;
-    width: 240px;
+    position: absolute; z-index: 100;
+    width: 220px;
     background: linear-gradient(to bottom, #241c0e, #161008);
     border: 1px solid #5a4020;
     box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 0 1px rgba(200,160,64,0.15),
@@ -789,7 +790,8 @@
       repeating-linear-gradient(0deg, transparent 0, transparent 18px, rgba(180,140,60,0.04) 18px, rgba(180,140,60,0.04) 19px),
       linear-gradient(to bottom, #241c0e, #161008);
   }
-  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateY(0); }
+  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+  .sleeve-popover { transform: translateX(-50%) translateY(6px); left: 50%; }
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -1201,6 +1203,32 @@
 
 
   <!-- ── RECORD STORE OVERLAY ── -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <filter id="wood-grain" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="turbulence" baseFrequency="0.015 0.35" numOctaves="4" seed="8" result="noise"/>
+        <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
+        <feColorMatrix type="matrix" result="wood-color"
+          values="0.6 0 0 0 0.22
+                  0.3 0 0 0 0.12
+                  0.1 0 0 0 0.04
+                  0   0 0 1 0"/>
+        <feBlend in="SourceGraphic" in2="wood-color" mode="multiply" result="blended"/>
+        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+      </filter>
+      <filter id="wood-grain-dark" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="turbulence" baseFrequency="0.012 0.4" numOctaves="5" seed="12" result="noise"/>
+        <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
+        <feColorMatrix type="matrix" result="wood-color"
+          values="0.5 0 0 0 0.18
+                  0.25 0 0 0 0.09
+                  0.08 0 0 0 0.02
+                  0    0 0 1 0"/>
+        <feBlend in="SourceGraphic" in2="wood-color" mode="multiply" result="blended"/>
+        <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+      </filter>
+    </defs>
+  </svg>
   <div class="store-overlay" id="store-overlay">
     <div class="store-hdr">
       <div class="store-title">Record Store</div>
@@ -2063,13 +2091,19 @@ function makeSleeve(r) {
     // Close all other popovers
     document.querySelectorAll('.sleeve-popover.vis').forEach(p => p.classList.remove('vis'));
     // Find or create body-level popover for this sleeve
+    // Reuse or create a single popover, attach to this sleeve
     let pop = document.getElementById('active-sleeve-pop');
     if (!pop) {
       pop = document.createElement('div');
       pop.id = 'active-sleeve-pop';
       pop.className = 'sleeve-popover';
-      document.body.appendChild(pop);
     }
+    // Detach from previous sleeve
+    if (pop.parentElement && pop.parentElement !== div) {
+      pop.parentElement.removeChild(pop);
+    }
+    // Move popover inside this sleeve so it scrolls with it
+    div.appendChild(pop);
     // Build popover content
     pop.innerHTML = `
       <div class="sp-artist">${esc(r.artist)}</div>
@@ -2083,25 +2117,14 @@ function makeSleeve(r) {
       toggleStore();
       openStoreRelease(r);
     });
-    // Position above the sleeve — clamp to viewport
-    const rect = div.getBoundingClientRect();
-    const pw = 240, ph = 200;
-    let left = rect.left + rect.width / 2 - pw / 2;
-    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-    // If not enough room above, show below
-    let top;
-    if (rect.top > ph + 20) {
-      top = rect.top - ph - 12;
-    } else {
-      top = rect.bottom + 12;
-    }
-    top = Math.max(8, Math.min(top, window.innerHeight - ph - 8));
-    pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
+    // Position above the sleeve (absolute, moves with scroll)
+    pop.style.bottom = (div.offsetHeight + 10) + 'px';
+    pop.style.top = '';
     pop.classList.add('vis');
   });
 
 
+  sleeveObserver.observe(div);
   return div;
 }
 
@@ -2138,6 +2161,16 @@ async function openStoreRelease(r) {
   btn.classList.remove('ld'); btn.disabled = false;
   busy = false;
 }
+
+// ── POPOVER SCROLL DISMISS ───────────────────────────────────────────────────
+const sleeveObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) {
+      const pop = entry.target.querySelector('#active-sleeve-pop');
+      if (pop) pop.classList.remove('vis');
+    }
+  });
+}, { threshold: 0.3 });
 
 // ── SHELF REFRESH ────────────────────────────────────────────────────────────
 async function refreshShelf(genre) {
