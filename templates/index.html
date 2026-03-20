@@ -138,7 +138,7 @@
 
   <div class="hdr">
     <div class="wm">Blind Spin</div>
-    <div class="hdr-sub">random release · musicbrainz + coverartarchive · rym link</div>
+    <div class="hdr-sub">random release · musicbrainz · bandcamp · no cultural weighting</div>
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
     </button>
@@ -149,8 +149,8 @@
       <div class="empty" id="empty">
         <div class="e1">press spin to pull a random release</div>
         <div class="e2"></div>
-        <div class="e3">source: musicbrainz browse api (random offset) + coverartarchive.org</div>
-        <div class="e3" style="margin-top:4px">strategy: truly random offset across 2.8m releases · no cultural weighting</div>
+        <div class="e3">sources: musicbrainz (2.8m releases, random offset) · bandcamp (dig_deeper, random genre/page)</div>
+        <div class="e3" style="margin-top:4px">strategy: coin-flip between sources each spin · no cultural weighting</div>
       </div>
 
       <div class="card" id="card">
@@ -211,15 +211,25 @@ async function spin() {
   log('spin started', 'info');
 
   try {
-    const rg = await mbViaProxy();
-    log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
+    const useBandcamp = Math.random() < 0.5;
+    log(`source: ${useBandcamp ? 'bandcamp' : 'musicbrainz'}`, 'info');
 
-    log('fetching tags...', 'dim');
-    rg.tags = await fetchTags(rg.mbid);
+    let rg;
+    if (useBandcamp) {
+      rg = await bcViaProxy();
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}/${rg.subgenre}] ${rg.year}`, 'ok');
+      log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+    } else {
+      rg = await mbViaProxy();
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.type}] ${rg.year}`, 'ok');
 
-    log('fetching cover...', 'dim');
-    rg.cover = await fetchCoverUrl(rg.mbid);
-    log(rg.cover ? 'cover found' : 'no cover', rg.cover ? 'ok' : 'dim');
+      log('fetching tags...', 'dim');
+      rg.tags = await fetchTags(rg.mbid);
+
+      log('fetching cover...', 'dim');
+      rg.cover = await fetchCoverUrl(rg.mbid);
+      log(rg.cover ? 'cover found' : 'no cover', rg.cover ? 'ok' : 'dim');
+    }
 
     render(rg);
   } catch(e) {
@@ -267,6 +277,44 @@ async function mbViaProxy() {
     await sleep(300);
   }
   throw new Error('could not find a suitable release-group after ' + MAX_TRIES + ' attempts');
+}
+
+// ── BC: pick a random release via dig_deeper ──────────────────────────────────
+async function bcViaProxy() {
+  const MAX_TRIES = 5;
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    log(`[bc] attempt ${attempt+1}`, 'dim');
+    let data;
+    try {
+      data = await apiFetch('/api/bc/random', 'bc');
+    } catch(e) {
+      log(`[bc] fetch failed: ${e.message}`, 'warn');
+      await sleep(400);
+      continue;
+    }
+    if (!data.artist || !data.title) {
+      log('[bc] empty result, retrying...', 'dim');
+      await sleep(300);
+      continue;
+    }
+    log(`[bc] genre=${data.genre} subgenre=${data.subgenre}`, 'dim');
+    return {
+      source:    'bandcamp',
+      artist:    data.artist,
+      title:     data.title,
+      url:       data.url,
+      cover:     data.cover || null,
+      tags:      data.tags  || [],
+      year:      data.year  || '',
+      type:      data.type  || 'album',
+      genre:     data.genre || '',
+      subgenre:  data.subgenre || '',
+      mbid:      null,
+      secondaryTypes: [],
+      country: '',
+    };
+  }
+  throw new Error('could not get a Bandcamp result after ' + MAX_TRIES + ' attempts');
 }
 
 // ── Tags ──────────────────────────────────────────────────────────────────────
@@ -344,7 +392,7 @@ function render(r) {
     covEl.innerHTML = '<div class="cnone">no art</div>';
   }
 
-  document.getElementById('csrc').textContent = 'musicbrainz.org';
+  document.getElementById('csrc').textContent = r.source === 'bandcamp' ? 'bandcamp.com' : 'musicbrainz.org';
   document.getElementById('cart').textContent = r.artist;
   document.getElementById('ctit').textContent = r.title;
 
@@ -353,8 +401,13 @@ function render(r) {
   pills.innerHTML = '';
   if (r.year)    pills.innerHTML += pill(r.year);
   if (r.type)    pills.innerHTML += pill(r.type, 'hi');
-  if (r.country) pills.innerHTML += pill(r.country);
-  for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
+  if (r.source === 'bandcamp') {
+    if (r.genre)    pills.innerHTML += pill(r.genre);
+    if (r.subgenre) pills.innerHTML += pill(r.subgenre);
+  } else {
+    if (r.country) pills.innerHTML += pill(r.country);
+    for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
+  }
 
   // Stats — just MB link count for now
   document.getElementById('ssec').style.display = 'none';
@@ -373,13 +426,20 @@ function render(r) {
 
   // Links
   const lrow = document.getElementById('lrow');
-  const mbUrl  = `https://musicbrainz.org/release-group/${r.mbid}`;
   const rymQ   = encodeURIComponent(r.artist + ' ' + r.title);
   const rymUrl = `https://rateyourmusic.com/search?searchterm=${rymQ}&searchtype=l`;
   const ytUrl  = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.artist+' '+r.title+' full album')}`;
 
+  let sourceLink = '';
+  if (r.source === 'bandcamp' && r.url) {
+    sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Bandcamp ↗</a>`;
+  } else if (r.mbid) {
+    const mbUrl = `https://musicbrainz.org/release-group/${r.mbid}`;
+    sourceLink = `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>`;
+  }
+
   lrow.innerHTML =
-    (r.mbid ? `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>` : '') +
+    sourceLink +
     `<a class="el" href="${escA(rymUrl)}" target="_blank" rel="noopener">Search RYM ↗</a>
     <a class="el" href="${escA(ytUrl)}"  target="_blank" rel="noopener">YouTube ↗</a>`;
 
