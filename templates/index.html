@@ -165,7 +165,8 @@
 
   /* ── LAYOUT ── */
   .body { flex: 1; display: grid; grid-template-columns: 1fr 220px; overflow: hidden; }
-  .main { overflow-y: auto; padding: 0; border-right: 1px solid var(--border); position: relative; }
+  .main { overflow-y: auto; padding: 0; border-right: 1px solid var(--border); position: relative; scrollbar-width: none; }
+  .main::-webkit-scrollbar { display: none; }
 
   /* ── CARD ── */
   .card { display: none; }
@@ -701,7 +702,7 @@
 
   /* Tray toggle button — looks like a physical pull-tab on a drawer */
   .tray-btn {
-    position: fixed; bottom: 0; left: 18px;
+    position: fixed; bottom: 0; left: 0;
     z-index: 501; cursor: pointer; transition: all 0.1s;
     font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem;
     letter-spacing: 0.18em; text-transform: uppercase;
