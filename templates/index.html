@@ -673,27 +673,32 @@
     height: 100%;
   }
   .crate-rec {
-    flex: 1; border-radius: 1px;
+    flex: 1; border-radius: 2px;
+    background: linear-gradient(170deg, var(--c1), var(--c2));
     box-shadow:
-      1px 0 4px rgba(0,0,0,0.8),
-      inset 0 1px 0 rgba(255,255,255,0.08),
-      inset 1px 0 0 rgba(255,255,255,0.04);
+      2px 0 6px rgba(0,0,0,0.9),
+      -1px 0 2px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.07);
     position: relative;
+    transform-origin: bottom center;
+    /* Vinyl groove lines */
+    background-image:
+      linear-gradient(170deg, var(--c1), var(--c2)),
+      repeating-radial-gradient(circle at 50% 50%, transparent 28%, rgba(0,0,0,0.06) 29%, transparent 30%);
+    display: flex; align-items: center; justify-content: center;
   }
-  /* Spine label line on each record */
-  .crate-rec::after {
-    content: ''; position: absolute;
-    left: 30%; right: 30%; top: 15%; height: 2px;
-    background: rgba(255,255,255,0.06); border-radius: 1px;
+  /* Center label circle */
+  .rec-label {
+    width: 35%; aspect-ratio: 1; border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    position: relative; z-index: 1;
   }
-  /* Horizontal crossbar across the middle of the crate */
-  .crate-crossbar {
-    position: absolute; left: -3px; right: -3px; z-index: 4;
-    height: 10px;
-    background: linear-gradient(to bottom, #7a5a28 0%, #5a4018 50%, #3a2a10 100%);
-    border-top: 1px solid #9a7a38; border-bottom: 2px solid #0e0904;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  .rec-label::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-conic-gradient(rgba(255,255,255,0.03) 0deg, transparent 2deg, transparent 10deg, rgba(255,255,255,0.03) 12deg);
   }
+
   .empty-title {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
     font-size: 2.8rem; margin-bottom: 10px; letter-spacing: 0.02em;
@@ -786,15 +791,14 @@
       <div class="empty" id="empty">
         <div class="empty-crate">
           <div class="crate-records">
-            <div class="crate-rec" style="height:92%;background:linear-gradient(170deg,#7a4228,#3a1e0c)"></div>
-            <div class="crate-rec" style="height:82%;background:linear-gradient(170deg,#2a5a34,#0e2818)"></div>
-            <div class="crate-rec" style="height:96%;background:linear-gradient(170deg,#6a3050,#2a1028)"></div>
-            <div class="crate-rec" style="height:78%;background:linear-gradient(170deg,#2a4a68,#0e1e38)"></div>
-            <div class="crate-rec" style="height:88%;background:linear-gradient(170deg,#7a5828,#3a2808)"></div>
-            <div class="crate-rec" style="height:84%;background:linear-gradient(170deg,#504838,#281e10)"></div>
-            <div class="crate-rec" style="height:94%;background:linear-gradient(170deg,#483068,#1e1038)"></div>
+            <div class="crate-rec" style="--c1:#7a4228;--c2:#3a1e0c;transform:rotate(-4deg);height:88%"><div class="rec-label" style="background:#5a3018"></div></div>
+            <div class="crate-rec" style="--c1:#2a5a34;--c2:#0e2818;transform:rotate(2deg);height:94%"><div class="rec-label" style="background:#1a3820"></div></div>
+            <div class="crate-rec" style="--c1:#6a3050;--c2:#2a1028;transform:rotate(-2deg);height:80%"><div class="rec-label" style="background:#4a2038"></div></div>
+            <div class="crate-rec" style="--c1:#2a4a68;--c2:#0e1e38;transform:rotate(3deg);height:92%"><div class="rec-label" style="background:#1a3050"></div></div>
+            <div class="crate-rec" style="--c1:#7a5828;--c2:#3a2808;transform:rotate(-1deg);height:86%"><div class="rec-label" style="background:#5a4018"></div></div>
+            <div class="crate-rec" style="--c1:#504838;--c2:#281e10;transform:rotate(4deg);height:90%"><div class="rec-label" style="background:#382810"></div></div>
+            <div class="crate-rec" style="--c1:#483068;--c2:#1e1038;transform:rotate(-3deg);height:84%"><div class="rec-label" style="background:#301e50"></div></div>
           </div>
-          <div class="crate-crossbar" style="top:48%"></div>
         </div>
         <div class="empty-title">Blind Spin</div>
         <div class="empty-sub">Press spin or hit spacebar</div>
