@@ -32,6 +32,8 @@ DISCOGS_BASE = "https://api.discogs.com"
 
 DISCOGS_TOKEN = os.environ.get("DISCOGS_TOKEN", "")
 DISCOGS_TOTAL = 15000000  # ~15M releases in Discogs
+LASTFM_KEY    = os.environ.get("LASTFM_API_KEY", "")
+LASTFM_BASE   = "https://ws.audioscrobbler.com/2.0"
 
 HEADERS = {
     "User-Agent": "BlindSpin/1.0 (https://github.com/KalelTonatiuh/blind-spin; contact@example.com)",
@@ -512,6 +514,112 @@ def ia_random():
         "identifier": identifier,
     })
 
+
+
+# ── Last.fm proxy ────────────────────────────────────────────────────────────
+
+LASTFM_TAGS = [
+    "rock", "electronic", "jazz", "hip-hop", "classical", "folk", "metal",
+    "ambient", "punk", "soul", "reggae", "blues", "indie", "experimental",
+    "pop", "country", "r&b", "latin", "noise", "drone", "post-rock",
+    "shoegaze", "psychedelic", "garage rock", "black metal", "doom metal",
+    "idm", "techno", "house", "new wave", "post-punk",
+]
+
+@app.route("/api/lfm/random")
+def lfm_random():
+    if not LASTFM_KEY:
+        return jsonify({"error": "LASTFM_API_KEY not set"}), 500
+
+    f_genre = request.args.get("genre", "")
+    tag = f_genre.lower() if f_genre else random.choice(LASTFM_TAGS)
+
+    # First fetch page 1 to discover total pages, then pick a random valid page
+    def fetch_page(page):
+        return session.get(LASTFM_BASE, params={
+            "method":  "tag.gettopalbums",
+            "tag":     tag,
+            "api_key": LASTFM_KEY,
+            "format":  "json",
+            "limit":   50,
+            "page":    page,
+        }, headers=HEADERS, timeout=10, verify=False)
+
+    try:
+        r = fetch_page(1)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+
+    # Check total pages available
+    attrs = data.get("albums", {}).get("@attr", {})
+    total_pages = int(attrs.get("totalPages", 1))
+    total_pages = min(total_pages, 20)  # cap at 20 to avoid very stale pages
+
+    # If more than 1 page exists, randomly pick one (not page 1 to avoid top-chart bias)
+    if total_pages > 1:
+        page = random.randint(2, total_pages)
+        try:
+            r = fetch_page(page)
+            r.raise_for_status()
+            data = r.json()
+        except Exception:
+            pass  # fall back to page 1 data
+
+    albums = data.get("albums", {}).get("album", [])
+    if not albums:
+        return jsonify({"error": "no albums", "tag": tag}), 404
+
+    albums = [a for a in albums if
+              a.get("name") and a["name"] not in ("[Unknown Album]", "") and
+              a.get("artist", {}).get("name") not in ("", "[Unknown Artist]")]
+    if not albums:
+        return jsonify({"error": "all filtered", "tag": tag}), 404
+
+    item   = random.choice(albums)
+    artist = item.get("artist", {}).get("name", "")
+    title  = item.get("name", "")
+    url_   = item.get("url", "")
+
+    images = item.get("image", [])
+    cover  = next((img["#text"] for img in reversed(images) if img.get("#text")), "")
+
+    tags_list = []
+    year = ""
+    try:
+        info_r = session.get(LASTFM_BASE, params={
+            "method":  "album.getinfo",
+            "artist":  artist,
+            "album":   title,
+            "api_key": LASTFM_KEY,
+            "format":  "json",
+        }, headers=HEADERS, timeout=8, verify=False)
+        info_r.raise_for_status()
+        info = info_r.json().get("album", {})
+        tags_list = [t["name"] for t in info.get("tags", {}).get("tag", []) if t.get("name")][:8]
+        published = info.get("wiki", {}).get("published", "")
+        if published:
+            import re
+            m = re.search(r'\b(19|20)\d{2}\b', published)
+            if m:
+                year = m.group(0)
+    except Exception:
+        pass
+
+    return jsonify({
+        "source":  "lastfm",
+        "artist":  artist,
+        "title":   title,
+        "url":     url_,
+        "cover":   cover,
+        "tags":    tags_list,
+        "year":    year,
+        "type":    "album",
+        "genre":   tag,
+        "label":   "",
+        "country": "",
+    })
 
 
 if __name__ == "__main__":

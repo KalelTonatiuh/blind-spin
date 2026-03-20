@@ -837,56 +837,72 @@
   /* ── TAG COLOR VARIANTS — aged sticker per genre family ── */
   /* rust — rock/metal: terracotta */
   .gt-rust {
-    background: linear-gradient(to bottom, #c8604a, #a84030) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #c8604a, #a84030) !important;
     border-color: #7a2818 !important; border-bottom-color: #3a1008 !important;
     color: #f8e0d8 !important; text-shadow: 0 1px 0 rgba(80,20,10,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,180,160,0.3) !important;
   }
   /* rose — pop/indie: dusty rose */
   .gt-rose {
-    background: linear-gradient(to bottom, #b87888, #9a5868) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #b87888, #9a5868) !important;
     border-color: #6a3848 !important; border-bottom-color: #2a1820 !important;
     color: #f8e8ec !important; text-shadow: 0 1px 0 rgba(60,20,30,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,210,0.3) !important;
   }
   /* teal — electronic: aged teal */
   .gt-teal {
-    background: linear-gradient(to bottom, #3a7880, #286068) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #3a7880, #286068) !important;
     border-color: #184848 !important; border-bottom-color: #082020 !important;
     color: #d8f0f0 !important; text-shadow: 0 1px 0 rgba(10,40,40,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,240,240,0.2) !important;
   }
   /* slate — jazz/blues: worn blue-grey */
   .gt-slate {
-    background: linear-gradient(to bottom, #5870a8, #405890) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #5870a8, #405890) !important;
     border-color: #283870 !important; border-bottom-color: #101830 !important;
     color: #e0e8f8 !important; text-shadow: 0 1px 0 rgba(20,30,60,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(180,200,255,0.2) !important;
   }
   /* olive — folk/classical: aged olive */
   .gt-olive {
-    background: linear-gradient(to bottom, #7a8840, #607030) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #7a8840, #607030) !important;
     border-color: #404820 !important; border-bottom-color: #181c08 !important;
     color: #f0f0d8 !important; text-shadow: 0 1px 0 rgba(30,35,10,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(220,230,160,0.25) !important;
   }
   /* ochre — hip-hop: warm ochre */
   .gt-ochre {
-    background: linear-gradient(to bottom, #c89830, #a87818) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #c89830, #a87818) !important;
     border-color: #785010 !important; border-bottom-color: #302008 !important;
     color: #fff8e0 !important; text-shadow: 0 1px 0 rgba(60,40,0,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.3) !important;
   }
   /* forest — reggae/ska: deep forest */
   .gt-forest {
-    background: linear-gradient(to bottom, #387848, #286038) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #387848, #286038) !important;
     border-color: #184828 !important; border-bottom-color: #081e10 !important;
     color: #d8f0e0 !important; text-shadow: 0 1px 0 rgba(10,30,15,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,240,180,0.2) !important;
   }
   /* plum — experimental: deep plum */
   .gt-plum {
-    background: linear-gradient(to bottom, #785888, #603870) !important;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px),
+      linear-gradient(to bottom, #785888, #603870) !important;
     border-color: #402850 !important; border-bottom-color: #180e20 !important;
     color: #f0e0f8 !important; text-shadow: 0 1px 0 rgba(40,20,50,0.5) !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(220,180,255,0.2) !important;
@@ -2083,23 +2099,13 @@ async function refreshShelf(genre) {
 }
 
 // ── TAG COLORS ───────────────────────────────────────────────────────────────────
-const TAG_COLORS = {
-  // Genre families
-  rock: 'rust', punk: 'rust', metal: 'rust', grunge: 'rust', hardcore: 'rust',
-  pop: 'rose', indie: 'rose', 'synth-pop': 'rose', 'dream pop': 'rose', shoegaze: 'rose',
-  electronic: 'teal', ambient: 'teal', techno: 'teal', house: 'teal', idm: 'teal', drone: 'teal',
-  jazz: 'slate', blues: 'slate', soul: 'slate', funk: 'slate', 'r&b': 'slate',
-  classical: 'olive', folk: 'olive', acoustic: 'olive', country: 'olive', bluegrass: 'olive',
-  'hip-hop': 'ochre', rap: 'ochre', 'hip hop': 'ochre', trap: 'ochre',
-  reggae: 'forest', ska: 'forest', dub: 'forest', afrobeat: 'forest',
-  experimental: 'plum', noise: 'plum', avant: 'plum', psychedelic: 'plum',
-};
+// Hash-based tag color — every tag gets a consistent color from its string
+// No need to maintain a list — any tag gets a deterministic hue + texture
+const TAG_COLOR_CLASSES = ['rust','rose','teal','slate','olive','ochre','forest','plum'];
 function tagColor(tag) {
-  const t = tag.toLowerCase();
-  for (const [key, color] of Object.entries(TAG_COLORS)) {
-    if (t.includes(key)) return color;
-  }
-  return 'default';
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) hash = (hash * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_COLOR_CLASSES[hash % TAG_COLOR_CLASSES.length];
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
