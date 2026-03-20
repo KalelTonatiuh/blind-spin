@@ -199,24 +199,59 @@
   .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 10px; line-height: 1.6; }
 
   .cmeta { position: relative; z-index: 1; flex: 1; min-width: 0; padding-bottom: 4px; }
-  .csrc { font-size: 0.5rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-dim); margin-bottom: 6px; }
-  .cart { font-size: 0.72rem; color: var(--sub); letter-spacing: 0.05em; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ctit { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 3rem; line-height: 1.05; color: var(--text); margin-bottom: 14px; word-break: break-word; }
+  .csrc {
+    font-size: 0.48rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: #7a6030; margin-bottom: 6px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+    /* Rubber stamp feel */
+    font-family: 'IBM Plex Mono', monospace;
+    opacity: 0.8;
+  }
+  .cart {
+    font-size: 0.7rem; color: #6a5838; letter-spacing: 0.06em; margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.8);
+  }
+  .ctit {
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 3rem;
+    line-height: 1.05; margin-bottom: 14px; word-break: break-word;
+    /* Aged gold — slightly uneven like old foil stamping */
+    background: linear-gradient(160deg, #d4b06a 0%, #a87830 25%, #c8a050 50%, #8a6020 75%, #c0983a 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+  }
   .cpills { display: flex; flex-wrap: wrap; gap: 5px; }
   .pill { font-size: 0.54rem; padding: 3px 9px; border: 1px solid rgba(255,200,80,0.12); color: rgba(200,180,130,0.5); letter-spacing: 0.06em; border-radius: 2px; background: rgba(0,0,0,0.2); }
   .pill.hi { border-color: rgba(200,160,64,0.5); color: #c8a040; background: rgba(200,160,64,0.06); box-shadow: 0 0 4px rgba(200,160,64,0.1); }
 
-  /* Content below the wash — aged sleeve liner notes */
+  /* Content below the wash — aged yellowed liner notes paper */
   .cbot {
     padding: 22px 32px 28px; flex-shrink: 0;
-    background: linear-gradient(to bottom, #0e0c08 0%, #0c0a06 100%);
     position: relative;
+    /* Aged cream/yellow paper */
+    background:
+      linear-gradient(to bottom, #141008 0%, #100e06 100%);
   }
   .cbot::before {
     content: ''; position: absolute; inset: 0; pointer-events: none;
+    /* Ruled paper lines + aged paper texture */
     background-image:
-      repeating-linear-gradient(0deg, transparent 0, transparent 23px, rgba(255,200,80,0.018) 23px, rgba(255,200,80,0.018) 24px),
-      repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(0,0,0,0.06) 40px, rgba(0,0,0,0.06) 41px);
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 22px,
+        rgba(180,140,60,0.05) 22px, rgba(180,140,60,0.05) 23px
+      ),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 60px,
+        rgba(255,200,80,0.012) 60px, rgba(255,200,80,0.012) 61px
+      );
+  }
+  /* Torn paper edge at top of cbot */
+  .cbot::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; pointer-events: none;
+    background: linear-gradient(to right,
+      rgba(180,140,60,0.15), rgba(120,90,30,0.08), rgba(180,140,60,0.2),
+      rgba(100,70,20,0.05), rgba(160,120,50,0.18));
+    border-top: 1px solid rgba(180,140,60,0.12);
   }
 
   .sec { margin-bottom: 20px; }
@@ -225,8 +260,23 @@
   .slbl::after { content: ''; flex: 1; height: 1px; background: #2a2010; }
 
   .grow, .drow { display: flex; flex-wrap: wrap; gap: 5px; }
-  .gt { font-size: 0.6rem; padding: 3px 9px; border: 1px solid #2e2818; color: #5a5040; letter-spacing: 0.05em; background: #100e08; border-radius: 2px; position: relative; z-index: 1; box-shadow: inset 0 1px 0 rgba(255,200,80,0.03), 0 1px 2px rgba(0,0,0,0.3); }
-  .gt.p { border-color: #6a5020; color: #c8a040; background: #180e04; box-shadow: 0 0 6px rgba(200,160,64,0.15), inset 0 1px 0 rgba(255,200,80,0.06); }
+  .gt {
+    font-size: 0.58rem; padding: 3px 10px; letter-spacing: 0.08em;
+    color: #7a6840; position: relative; z-index: 1;
+    /* Price sticker / rubber stamp */
+    background: linear-gradient(to bottom, #1a1608, #120e06);
+    border: 1px solid #3a3020;
+    border-bottom: 2px solid #0a0806;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,200,60,0.04);
+    border-radius: 1px;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.8);
+  }
+  .gt.p {
+    color: #c8a040; background: linear-gradient(to bottom, #221608, #180e04);
+    border-color: #7a5820; border-bottom-color: #1a0c04;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(200,160,64,0.12), inset 0 1px 0 rgba(255,200,60,0.08);
+    text-shadow: 0 0 8px rgba(200,160,64,0.3), 0 1px 1px rgba(0,0,0,0.8);
+  }
   .dt { font-size: 0.57rem; color: var(--muted); letter-spacing: 0.02em; }
   .dt::before { content: '·'; margin-right: 4px; }
 
@@ -236,16 +286,43 @@
   .sv.g { color: var(--green); } .sv.m { color: var(--amber); } .sv.b { color: var(--red); }
   .sl { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; display: block; }
 
-  .tlist { border: 1px solid var(--border); }
-  .tr { display: flex; gap: 8px; align-items: baseline; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 0.63rem; }
+  .tlist {
+    border: 1px solid #2a2010;
+    border-left: 3px solid #6a3020; /* red margin line like ruled paper */
+    background: linear-gradient(to bottom, #0e0c06, #0c0a04);
+    position: relative; z-index: 1;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .tr {
+    display: flex; gap: 8px; align-items: baseline;
+    padding: 5px 10px; border-bottom: 1px solid rgba(180,140,60,0.07);
+    font-size: 0.62rem;
+  }
   .tr:last-child { border-bottom: none; }
-  .tn { color: var(--muted); min-width: 15px; text-align: right; flex-shrink: 0; }
-  .tt { flex: 1; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .td { color: var(--muted); font-size: 0.58rem; flex-shrink: 0; }
+  .tr:hover { background: rgba(180,140,60,0.03); }
+  .tn { color: #4a3a20; min-width: 18px; text-align: right; flex-shrink: 0; font-size: 0.55rem; }
+  .tt { flex: 1; color: #7a6840; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.02em; }
+  .td { color: #3a3020; font-size: 0.56rem; flex-shrink: 0; font-style: italic; }
 
-  .lrow { display: flex; gap: 14px; flex-wrap: wrap; padding-top: 0; }
-  .el { font-size: 0.6rem; color: var(--link); text-decoration: none; letter-spacing: 0.05em; border-bottom: 1px solid transparent; transition: border-color 0.1s; }
-  .el:hover { border-color: var(--link); }
+  .lrow { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 0; }
+  .el {
+    font-size: 0.58rem; text-decoration: none; letter-spacing: 0.08em;
+    /* Aged typewriter ink — dark brown-blue */
+    color: #6a7a5a;
+    padding: 3px 10px;
+    background: linear-gradient(to bottom, #141208, #0e0c06);
+    border: 1px solid #2a2e20;
+    border-bottom: 2px solid #080a06;
+    border-radius: 1px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(150,180,100,0.04);
+    transition: all 0.1s;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.7);
+  }
+  .el:hover {
+    color: #a0b870; border-color: #4a5a30;
+    background: linear-gradient(to bottom, #1a1a0e, #141208);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4), 0 0 6px rgba(120,160,60,0.1);
+  }
 
   .note { font-size: 0.58rem; color: var(--muted); margin-top: 14px; padding: 8px 10px; border: 1px dashed var(--border); line-height: 1.6; }
 
@@ -354,10 +431,27 @@
   }
   .blurb-src { font-size: 0.5rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px; }
 
-  .info-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-  .info-item { display: flex; flex-direction: column; gap: 3px; }
-  .info-lbl { font-size: 0.48rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
-  .info-val { font-size: 0.65rem; color: var(--text); }
+  .info-row {
+    display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 16px;
+    border-bottom: 1px solid rgba(180,140,60,0.1);
+    position: relative; z-index: 1;
+  }
+  .info-item {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 8px 14px 8px 0; margin-right: 14px;
+    border-right: 1px solid rgba(180,140,60,0.08);
+  }
+  .info-item:last-child { border-right: none; }
+  .info-lbl {
+    font-size: 0.44rem; letter-spacing: 0.24em; text-transform: uppercase;
+    color: #6a3020; /* red ink like index card label */
+    text-shadow: 0 1px 0 rgba(0,0,0,0.8);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .info-val {
+    font-size: 0.64rem; color: #9a8860; letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  }
 
   @media (max-width: 680px) {
     .fbar.open { max-height: 260px; }
@@ -421,7 +515,7 @@
       inset 0 2px 4px rgba(255,200,100,0.06),
       inset 0 -2px 6px rgba(0,0,0,0.4),
       0 4px 12px rgba(0,0,0,0.6);
-    overflow-x: auto;
+    overflow-x: auto; overflow-y: visible;
     scrollbar-width: thin;
     scrollbar-color: #4a3018 #2a1a08;
   }
@@ -454,6 +548,7 @@
     position: relative; cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     transform-origin: bottom center;
+    overflow: visible;
   }
   .sleeve:hover { transform: translateY(-12px) rotate(-1.5deg); }
   .sleeve:hover .sleeve-info { opacity: 1; }
@@ -525,24 +620,40 @@
   /* ── HISTORY & FAVORITES TRAY ── */
   .tray {
     position: fixed; bottom: 0; left: 0; right: 220px; z-index: 500;
-    background: linear-gradient(to top, #0e0c08 0%, rgba(14,12,8,0.95) 100%);
-    border-top: 1px solid #2a2010;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
-    transform: translateY(100%); transition: transform 0.2s ease;
+    background: linear-gradient(to top, #1a1208 0%, #141008 100%);
+    border-top: 2px solid #5a4020;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,200,80,0.07);
+    transform: translateY(100%); transition: transform 0.25s ease;
     max-height: 120px;
+    /* Wood grain texture */
+    background-image:
+      linear-gradient(to top, #1a1208 0%, #141008 100%),
+      repeating-linear-gradient(90deg, transparent 0, transparent 8px, rgba(0,0,0,0.06) 8px, rgba(0,0,0,0.06) 9px);
   }
   .tray.open { transform: translateY(0); }
   .tray-hdr {
-    display: flex; align-items: center; gap: 10px; padding: 6px 16px 4px;
-    border-bottom: 1px solid #1a1408;
+    display: flex; align-items: center; gap: 10px; padding: 7px 16px 5px;
+    border-bottom: 1px solid #2a1e0c;
+    background: linear-gradient(to bottom, #201808, #181208);
   }
   .tray-tab {
     font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase;
-    color: #5a4820; cursor: pointer; padding: 3px 8px; border: 1px solid transparent;
-    border-radius: 2px; transition: all 0.1s; background: none; font-family: inherit;
+    color: #5a4020; cursor: pointer; padding: 3px 10px;
+    background: linear-gradient(to bottom, #1a1408, #120e06);
+    border: 1px solid #2e2010; border-bottom: 2px solid #080604;
+    border-radius: 1px; transition: all 0.1s; font-family: inherit;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
   }
-  .tray-tab.active { color: #c8a040; border-color: #4a3818; background: #1a1208; }
-  .tray-close { margin-left: auto; font-size: 0.5rem; color: #3a2a10; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .tray-tab.active {
+    color: #c8a040; background: linear-gradient(to bottom, #2a1e0a, #1a1208);
+    border-color: #6a4818; border-bottom-color: #0a0604;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 0 6px rgba(200,160,64,0.1);
+  }
+  .tray-close {
+    margin-left: auto; font-size: 0.5rem; color: #3a2a10;
+    background: none; border: none; cursor: pointer; font-family: inherit;
+    transition: color 0.1s; letter-spacing: 0.1em;
+  }
   .tray-close:hover { color: #7a5a28; }
   .tray-scroll { display: flex; gap: 8px; padding: 8px 16px 10px; overflow-x: auto; scrollbar-width: none; }
   .tray-scroll::-webkit-scrollbar { display: none; }
@@ -562,15 +673,30 @@
   .tray-item-title { font-size: 0.42rem; color: #5a4820; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 64px; letter-spacing: 0.04em; }
   .tray-item.fav .tray-thumb { border-color: #7a5020; box-shadow: 0 0 6px rgba(200,160,64,0.2); }
 
-  /* Tray toggle button in header */
+  /* Tray toggle button — looks like a physical pull-tab on a drawer */
   .tray-btn {
     position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    z-index: 501; background: #1a1208; border: 1px solid #3a2a10;
-    border-bottom: none; color: #5a4020; font-family: inherit;
-    font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 4px 14px; cursor: pointer; transition: color 0.1s;
+    z-index: 501; cursor: pointer; transition: all 0.1s;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #8a7040;
+    padding: 5px 20px 4px;
+    background: linear-gradient(to bottom, #3a2c14 0%, #2a1e0c 60%, #1e1608 100%);
+    border: 1px solid #6a5028;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    box-shadow:
+      0 -3px 8px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,200,80,0.1),
+      inset 1px 0 0 rgba(255,200,80,0.04),
+      inset -1px 0 0 rgba(255,200,80,0.04);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
   }
-  .tray-btn:hover { color: #c8a040; }
+  .tray-btn:hover {
+    color: #c8a040;
+    background: linear-gradient(to bottom, #4a3a1c 0%, #382810 60%, #2a1e0c 100%);
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,80,0.15);
+  }
 
   /* Favorite star on card */
   .fav-btn {
@@ -593,15 +719,15 @@
 
   /* ── SLEEVE POPOVER ── */
   .sleeve-popover {
-    position: absolute; bottom: 260px; left: 50%; transform: translateX(-50%);
-    width: 220px; z-index: 10;
+    position: absolute; bottom: 250px; left: 50%; transform: translateX(-50%) translateY(8px);
+    width: 220px; z-index: 20;
     background: linear-gradient(to bottom, #1e180c, #141008);
     border: 1px solid #4a3818;
     box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(200,160,64,0.1);
     padding: 12px; border-radius: 3px;
     opacity: 0; pointer-events: none; transition: opacity 0.15s;
   }
-  .sleeve-popover.vis { opacity: 1; pointer-events: all; }
+  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -699,6 +825,7 @@
           <option value="discogs">discogs</option>
           <option value="mb">musicbrainz</option>
           <option value="archive">internet archive</option>
+          <option value="lastfm">last.fm</option>
         </select>
       </div>
       <div class="fg">
@@ -867,7 +994,7 @@
         </div>
         <div class="empty-title">Blind Spin</div>
         <div class="empty-sub">Press spin or hit spacebar</div>
-        <div class="empty-hint">musicbrainz · discogs · internet archive · no cultural weighting</div>
+        <div class="empty-hint">musicbrainz · discogs · internet archive · last.fm</div>
       </div>
 
       <div class="card" id="card">
@@ -1006,7 +1133,7 @@ async function spin() {
     if (f.source === 'discogs') source = 'discogs';
     else if (f.source === 'mb') source = 'mb';
     else if (f.source === 'archive') source = 'archive';
-    else { const r = Math.random(); source = r < 0.3 ? 'mb' : r < 0.7 ? 'discogs' : 'archive'; }
+    else { const r = Math.random(); source = r < 0.25 ? 'mb' : r < 0.5 ? 'discogs' : r < 0.75 ? 'archive' : 'lastfm'; }
 
     log(`source: ${source}`, 'info');
 
@@ -1018,6 +1145,10 @@ async function spin() {
     } else if (source === 'archive') {
       rg = await iaViaProxy(f);
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.collection}] ${rg.year}`, 'ok');
+      log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+    } else if (source === 'lastfm') {
+      rg = await lfmViaProxy(f);
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
       try {
@@ -1274,7 +1405,7 @@ function render(r) {
     covEl.innerHTML = '<div class="cnone">no art</div>';
   }
 
-  const srcLabels = { discogs: 'discogs.com', mb: 'musicbrainz.org', archive: 'archive.org' };
+  const srcLabels = { discogs: 'discogs.com', mb: 'musicbrainz.org', archive: 'archive.org', lastfm: 'last.fm' };
   document.getElementById('csrc').textContent = srcLabels[r.source] || r.source;
   document.getElementById('cart').textContent = r.artist;
   document.getElementById('ctit').textContent = r.title;
@@ -1289,6 +1420,8 @@ function render(r) {
     if (r.country)  pills.innerHTML += pill(r.country);
   } else if (r.source === 'archive') {
     if (r.collection) pills.innerHTML += pill(r.collection.replace(/_/g, ' '));
+  } else if (r.source === 'lastfm') {
+    if (r.genre) pills.innerHTML += pill(r.genre);
   } else {
     if (r.country) pills.innerHTML += pill(r.country);
     for (const st of (r.secondaryTypes||[]).slice(0,2)) pills.innerHTML += pill(st);
@@ -1320,6 +1453,8 @@ function render(r) {
     sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Discogs ↗</a>`;
   } else if (r.source === 'archive' && r.url) {
     sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Archive.org ↗</a>`;
+  } else if (r.source === 'lastfm' && r.url) {
+    sourceLink = `<a class="el" href="${escA(r.url)}" target="_blank" rel="noopener">Last.fm ↗</a>`;
   } else if (r.mbid) {
     const mbUrl = `https://musicbrainz.org/release-group/${r.mbid}`;
     sourceLink = `<a class="el" href="${escA(mbUrl)}" target="_blank" rel="noopener">MusicBrainz ↗</a>`;
@@ -1481,7 +1616,7 @@ async function spinWithFilters(f) {
     if (f.source === 'discogs') source = 'discogs';
     else if (f.source === 'mb') source = 'mb';
     else if (f.source === 'archive') source = 'archive';
-    else { const r = Math.random(); source = r < 0.3 ? 'mb' : r < 0.7 ? 'discogs' : 'archive'; }
+    else { const r = Math.random(); source = r < 0.25 ? 'mb' : r < 0.5 ? 'discogs' : r < 0.75 ? 'archive' : 'lastfm'; }
 
     log(`source: ${source}`, 'info');
     let rg;
@@ -1492,6 +1627,10 @@ async function spinWithFilters(f) {
     } else if (source === 'archive') {
       rg = await iaViaProxy(f);
       log(`got: "${rg.artist}" — "${rg.title}" [${rg.collection}] ${rg.year}`, 'ok');
+      log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
+    } else if (source === 'lastfm') {
+      rg = await lfmViaProxy(f);
+      log(`got: "${rg.artist}" — "${rg.title}" [${rg.genre}] ${rg.year}`, 'ok');
       log(rg.cover ? 'cover included' : 'no cover', rg.cover ? 'ok' : 'dim');
     } else {
       try {
@@ -1617,6 +1756,47 @@ function exportFavs() {
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'blind-spin-favorites.csv';
   a.click();
+}
+
+// ── Last.fm: pick a random album ─────────────────────────────────────────────
+async function lfmViaProxy(f={}) {
+  const MAX_TRIES = 5;
+  for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+    log(`[lfm] attempt ${attempt+1}`, 'dim');
+    let data;
+    try {
+      const params = new URLSearchParams();
+      if (f.genre) params.set('genre', f.genre);
+      const qs = params.toString() ? '?' + params.toString() : '';
+      data = await apiFetch('/api/lfm/random' + qs, 'lfm');
+    } catch(e) {
+      log(`[lfm] fetch failed: ${e.message}`, 'warn');
+      await sleep(400);
+      continue;
+    }
+    if (!data.artist || !data.title) {
+      log('[lfm] empty result, retrying...', 'dim');
+      await sleep(300);
+      continue;
+    }
+    log(`[lfm] tag=${data.genre}`, 'dim');
+    return {
+      source:  'lastfm',
+      artist:  data.artist,
+      title:   data.title,
+      url:     data.url,
+      cover:   data.cover || null,
+      tags:    data.tags  || [],
+      year:    data.year  || '',
+      type:    'album',
+      genre:   data.genre || '',
+      label:   '',
+      country: '',
+      mbid:    null,
+      secondaryTypes: [],
+    };
+  }
+  throw new Error('could not get a Last.fm result after ' + MAX_TRIES + ' attempts');
 }
 
 // ── RECORD STORE ─────────────────────────────────────────────────────────────
