@@ -783,7 +783,7 @@
 
   /* ── SLEEVE POPOVER ── */
   #store-popover {
-    display: none; position: fixed; z-index: 9999;
+    position: fixed; z-index: 9999;
     width: 220px;
     background:
       repeating-linear-gradient(0deg, transparent 0, transparent 18px, rgba(180,140,60,0.04) 18px, rgba(180,140,60,0.04) 19px),
@@ -791,9 +791,11 @@
     border: 1px solid #5a4020;
     box-shadow: 0 12px 40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,200,80,0.08);
     padding: 14px; border-radius: 2px;
-    opacity: 0; transition: opacity 0.12s ease;
+    opacity: 0; pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
   }
-  #store-popover.vis { display: block; opacity: 1; }
+  #store-popover.vis { opacity: 1; pointer-events: all; transform: translateY(0); }
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
