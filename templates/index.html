@@ -421,13 +421,20 @@
     border-bottom: 2px solid #080a06;
     border-radius: 1px;
     box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(150,180,100,0.04);
-    transition: all 0.1s;
+    transition: transform 0.07s ease, box-shadow 0.07s ease, color 0.1s, border-color 0.1s;
     text-shadow: 0 1px 1px rgba(0,0,0,0.7);
+    display: inline-block;
+    position: relative;
   }
   .el:hover {
     color: #a0b870; border-color: #4a5a30;
     background: linear-gradient(to bottom, #1a1a0e, #141208);
     box-shadow: 0 2px 3px rgba(0,0,0,0.4), 0 0 6px rgba(120,160,60,0.1);
+  }
+  .el:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 1px rgba(0,0,0,0.4);
+    border-bottom-width: 1px;
   }
 
   .note { font-size: 0.58rem; color: var(--muted); margin-top: 14px; padding: 8px 10px; border: 1px dashed var(--border); line-height: 1.6; }
@@ -438,17 +445,31 @@
     flex-shrink: 0; overflow: hidden; transition: max-height 0.25s ease;
     max-height: 0;
     background: linear-gradient(to bottom, #141008 0%, #0e0c06 100%);
-    border-bottom: 2px solid #2a2010;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
+    border-bottom: 3px solid #1a1208;
+    box-shadow:
+      inset 0 3px 8px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(0,0,0,0.8),
+      0 3px 8px rgba(0,0,0,0.4);
     position: relative;
   }
-  /* Cardboard texture lines */
+  /* Aged cardboard texture — horizontal lines like a catalog drawer interior */
   .fbar::before {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background-image: repeating-linear-gradient(
-      90deg, transparent 0, transparent 4px,
-      rgba(255,200,80,0.015) 4px, rgba(255,200,80,0.015) 5px
-    );
+    background-image:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 18px,
+        rgba(180,140,60,0.04) 18px, rgba(180,140,60,0.04) 19px
+      ),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 4px,
+        rgba(255,200,80,0.012) 4px, rgba(255,200,80,0.012) 5px
+      );
+  }
+  /* Drawer-slide shadow at top — looks pulled out from under the header */
+  .fbar::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
   }
   .fbar.open { max-height: 160px; }
   .fbar-inner { padding: 12px 20px 14px; display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end; position: relative; }
@@ -760,13 +781,37 @@
   }
   .sleeve-year { font-size: 0.48rem; color: #6a5030; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; }
 
-  /* Loading skeleton sleeve */
+  /* Loading skeleton sleeve — face-down cardboard in a crate */
   .sleeve-loading .sleeve-inner {
-    background: linear-gradient(90deg, #1e140a 25%, #2a1e10 50%, #1e140a 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 18px,
+        rgba(0,0,0,0.08) 18px, rgba(0,0,0,0.08) 19px
+      ),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 30px,
+        rgba(255,200,80,0.025) 30px, rgba(255,200,80,0.025) 31px
+      ),
+      linear-gradient(160deg, #2a1e0e 0%, #221608 40%, #1e140a 65%, #2a1e0e 100%);
+    /* Subtle pulse rather than shimmer slide */
+    animation: cardboard-breathe 2.2s ease-in-out infinite;
   }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .sleeve-loading .sleeve-inner::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg,
+      transparent 40%,
+      rgba(255,220,120,0.04) 50%,
+      transparent 60%);
+    animation: cardboard-sheen 2.2s ease-in-out infinite;
+  }
+  @keyframes cardboard-breathe {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1;   }
+  }
+  @keyframes cardboard-sheen {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 1; }
+  }
 
   /* ── HISTORY & FAVORITES TRAY ── */
   .tray {
@@ -818,8 +863,23 @@
     width: 54px; height: 54px; background: #1a1208;
     border: 1px solid #2a2010; overflow: hidden; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(0,0,0,0.3), 0 2px 5px rgba(0,0,0,0.5);
   }
-  .tray-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  /* Ring-stain overlay on each thumb */
+  .tray-thumb::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    background-image:
+      radial-gradient(ellipse 38px 36px at 62% 55%, transparent 60%, rgba(160,110,40,0.09) 61%, rgba(160,110,40,0.12) 63%, transparent 64%),
+      radial-gradient(ellipse 22px 20px at 30% 28%, transparent 55%, rgba(120,80,20,0.07) 56%, rgba(120,80,20,0.09) 58%, transparent 59%);
+  }
+  /* Worn bottom-right corner dog-ear */
+  .tray-thumb::after {
+    content: ''; position: absolute; bottom: 0; right: 0; z-index: 3;
+    width: 10px; height: 10px; pointer-events: none;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.45) 50%);
+  }
+  .tray-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tray-thumb-none { font-size: 1rem; opacity: 0.2; }
   .tray-item-title { font-size: 0.42rem; color: #5a4820; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 64px; letter-spacing: 0.04em; }
   .tray-item.fav .tray-thumb { border-color: #7a5020; box-shadow: 0 0 6px rgba(200,160,64,0.2); }
@@ -900,7 +960,27 @@
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .sp-tag { display: inline-block; font-size: 0.48rem; color: #5a4828; border: 1px solid #2a2010; padding: 1px 5px; margin: 0 3px 3px 0; border-radius: 2px; }
+  .sp-tag {
+    display: inline-block; font-size: 0.48rem; padding: 2px 7px;
+    letter-spacing: 0.07em; margin: 0 3px 4px 0;
+    position: relative;
+    background:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,220,120,0.015) 2px, rgba(255,220,120,0.015) 4px),
+      linear-gradient(to bottom, #e8d8a0 0%, #d4c080 40%, #c8b060 100%);
+    border: 1px solid #8a7040;
+    border-bottom: 2px solid #5a4820;
+    color: #3a2c10;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,200,0.4);
+    border-radius: 1px;
+    text-shadow: 0 1px 0 rgba(255,255,200,0.3);
+  }
+  .sp-tag:nth-child(odd)  { transform: rotate(-0.5deg); }
+  .sp-tag:nth-child(even) { transform: rotate(0.4deg); }
+  .sp-tag::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 5px; height: 5px;
+    background: linear-gradient(225deg, rgba(0,0,0,0.28) 50%, transparent 50%);
+  }
   .sleeve-open-btn {
     display: block; width: 100%; margin-top: 8px; padding: 6px;
     background: linear-gradient(to bottom, #2a2010, #1a1408);
@@ -983,8 +1063,24 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
   }
-  .empty-sub { font-size: 0.58rem; color: #6a5030; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 8px; }
-  .empty-hint { font-size: 0.5rem; color: #3a2e18; letter-spacing: 0.1em; }
+  .empty-sub {
+    font-size: 0.58rem; letter-spacing: 0.26em; text-transform: uppercase; margin-bottom: 8px;
+    /* Stencilled rubber-stamp look — slightly irregular opacity */
+    color: transparent;
+    background: linear-gradient(to bottom, #7a6040 0%, #5a4428 50%, #7a6040 100%);
+    -webkit-background-clip: text; background-clip: text;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+    opacity: 0.85;
+  }
+  .empty-hint {
+    font-size: 0.5rem; letter-spacing: 0.14em;
+    /* Faded typewriter ink — looks like text stamped on aged cardboard */
+    color: #2e2416;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.9), 0 0 8px rgba(180,120,40,0.05);
+    border: 1px dashed rgba(80,55,20,0.2);
+    padding: 4px 12px;
+    background: rgba(180,140,60,0.02);
+  }
 
   /* ── MOBILE ── */
   @media (max-width: 680px) {
