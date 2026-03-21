@@ -667,12 +667,19 @@
   /* ── RECORD STORE OVERLAY ── */
   .store-overlay {
     display: none; position: fixed; inset: 0; z-index: 1000;
-    overflow-y: auto; overscroll-behavior: contain; flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: contain; flex-direction: column;
     background-color: #0d0805;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%230d0805'/%3E%3Cg fill='none' stroke='%23503018' stroke-width='1' opacity='0.7'%3E%3C!-- outer diamond frame --%3E%3Cpath d='M60 8 L112 60 L60 112 L8 60 Z'/%3E%3C!-- inner diamond --%3E%3Cpath d='M60 26 L94 60 L60 94 L26 60 Z'/%3E%3C!-- corner petals --%3E%3Cpath d='M8 60 Q17 46 26 60 Q17 74 8 60 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M112 60 Q103 46 94 60 Q103 74 112 60 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M60 8 Q46 17 60 26 Q74 17 60 8 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M60 112 Q46 103 60 94 Q74 103 60 112 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3C!-- diagonal spurs --%3E%3Cpath d='M26 60 Q43 43 60 26' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M94 60 Q77 43 60 26' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M26 60 Q43 77 60 94' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M94 60 Q77 77 60 94' stroke-width='0.6' stroke='%23402510'/%3E%3C!-- center rosette --%3E%3Ccircle cx='60' cy='60' r='10' fill='%23281408' stroke='%23604020' stroke-width='1'/%3E%3Ccircle cx='60' cy='60' r='6' fill='none' stroke='%23503018' stroke-width='0.8'/%3E%3Ccircle cx='60' cy='60' r='2.5' fill='%23604020'/%3E%3C!-- corner dots --%3E%3Ccircle cx='60' cy='8' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='60' cy='112' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='8' cy='60' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='112' cy='60' r='2' fill='%23503018' stroke='none'/%3E%3C!-- tile corner connectors --%3E%3Cpath d='M0 0 Q8 8 0 16' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M120 0 Q112 8 120 16' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M0 120 Q8 112 0 104' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M120 120 Q112 112 120 104' stroke='%23402010' stroke-width='0.6'/%3E%3C/g%3E%3C/svg%3E");
     background-size: 120px 120px;
   }
   .store-overlay.open { display: flex; }
+  /* Inner scroll wrapper — sticky children work relative to this */
+  .store-scroll {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain;
+    display: flex; flex-direction: column;
+  }
 
   .store-hdr {
     flex-shrink: 0; display: flex; align-items: center; gap: 16px;
@@ -703,10 +710,10 @@
 
   /* ── DECADE CRATE DIVIDERS ── */
   .decade-bar {
-    position: sticky; top: 57px; z-index: 9;
+    position: sticky; top: 53px; z-index: 9;
     display: flex; align-items: flex-end; gap: 4px;
     padding: 0 24px 0;
-    /* Dark wood rail the dividers sit on */
+    flex-shrink: 0;
     background:
       repeating-linear-gradient(90deg,
         transparent 0, transparent 8px,
@@ -715,7 +722,10 @@
       linear-gradient(to bottom, #1a1208, #0e0904);
     border-bottom: 3px solid #0a0804;
     box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.05);
-    overflow-x: auto; overflow-y: visible;
+    overflow-x: auto;
+    /* Must not clip the tabs' upward protrusion — padding-top gives room */
+    overflow-y: visible;
+    padding-top: 8px;
     scrollbar-width: none;
   }
   .decade-bar::-webkit-scrollbar { display: none; }
@@ -1609,6 +1619,7 @@
       <span class="store-status" id="store-status"></span>
       <button class="store-close" onclick="toggleStore()">✕ Close</button>
     </div>
+    <div class="store-scroll" id="store-scroll">
     <!-- Decade crate dividers -->
     <div class="decade-bar" id="decade-bar">
       <div class="decade-tab all-tab active" data-decade="all" onclick="selectDecade(this,'all')">All</div>
@@ -1629,6 +1640,7 @@
         <div class="decade-section-rule"></div>
       </div>
       <div id="decade-shelves"></div>
+    </div>
     </div>
   </div>
 </div>
@@ -2678,7 +2690,7 @@ function makeSleeve(r) {
     pop.classList.add('vis');
     placePopover();
     // Update position on any scroll inside the store overlay
-    const overlay = document.getElementById('store-overlay');
+    const overlay = document.getElementById('store-scroll') || document.getElementById('store-overlay');
     if (overlay && !overlay._popScrollListener) {
       overlay._popScrollListener = true;
       overlay.addEventListener('scroll', () => {
