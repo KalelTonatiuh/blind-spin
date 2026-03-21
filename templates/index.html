@@ -782,28 +782,18 @@
   .export-btn:hover { color: #c8a040; border-color: #5a3a18; }
 
   /* ── SLEEVE POPOVER ── */
-  .sleeve-popover {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    z-index: 9999;
-    /* #store-popover overrides with position:fixed via inline style */
+  #store-popover {
+    display: none; position: fixed; z-index: 9999;
     width: 220px;
-    background: linear-gradient(to bottom, #241c0e, #161008);
-    border: 1px solid #5a4020;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 0 1px rgba(200,160,64,0.15),
-      inset 0 1px 0 rgba(255,200,80,0.08);
-    padding: 14px; border-radius: 2px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-    transform: translateY(6px);
-    /* Aged paper texture */
-    background-image:
+    background:
       repeating-linear-gradient(0deg, transparent 0, transparent 18px, rgba(180,140,60,0.04) 18px, rgba(180,140,60,0.04) 19px),
       linear-gradient(to bottom, #241c0e, #161008);
+    border: 1px solid #5a4020;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,200,80,0.08);
+    padding: 14px; border-radius: 2px;
+    opacity: 0; transition: opacity 0.12s ease;
   }
-  .sleeve-popover { transform: translateX(-50%) translateY(6px); }
-  .sleeve-popover.vis { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+  #store-popover.vis { display: block; opacity: 1; }
   .sp-artist { font-size: 0.54rem; color: #c8a040; letter-spacing: 0.06em; margin-bottom: 3px; }
   .sp-title { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: #e2dfd6; margin-bottom: 6px; line-height: 1.2; }
   .sp-meta { font-size: 0.5rem; color: #5a4828; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -1240,13 +1230,7 @@ function log(msg, t='ok') {
 }
 function clrLog() { logEl.innerHTML=''; cdot.className='cdot'; }
 
-// ── GLOBAL CLICK — close store popover when clicking outside sleeves ──────────
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.sleeve') && !e.target.closest('#store-popover')) {
-    const sp = document.getElementById('store-popover');
-    if (sp) sp.classList.remove('vis');
-  }
-});
+
 
 // ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
@@ -1990,7 +1974,7 @@ function toggleStore() {
   storeOpen = !storeOpen;
   overlay.classList.toggle('open', storeOpen);
   const sp = document.getElementById('store-popover');
-  if (sp) { sp.classList.remove('vis'); if (sp._shelf && sp._positionFn) sp._shelf.removeEventListener('scroll', sp._positionFn); }
+  if (sp) sp.classList.remove('vis');
   document.getElementById('storebtn').classList.toggle('on', storeOpen);
   const storeBody = document.getElementById('store-body');
   if (storeOpen && (!storeLoaded || !storeBody.children.length)) loadStore();
@@ -2089,59 +2073,62 @@ function makeSleeve(r) {
 
   div.addEventListener('click', (e) => {
     e.stopPropagation();
-    // Get or create the store-level popover
+    // Get or create the single store-level popover
     let pop = document.getElementById('store-popover');
     if (!pop) {
       pop = document.createElement('div');
       pop.id = 'store-popover';
-      pop.className = 'sleeve-popover';
-      pop.style.position = 'fixed';
-      pop.style.zIndex = '2000';
       document.body.appendChild(pop);
+      // Close on outside click
+      document.addEventListener('click', () => pop.classList.remove('vis'));
+      pop.addEventListener('click', e => e.stopPropagation());
     }
-    // If clicking the same sleeve, toggle off
-    if (pop.classList.contains('vis') && pop._sleeve === div) {
+    // Toggle off if same sleeve clicked again
+    if (pop._sleeve === div && pop.classList.contains('vis')) {
       pop.classList.remove('vis');
+      pop._sleeve = null;
       return;
     }
     pop._sleeve = div;
+    // Fill content
     pop.innerHTML = `
       <div class="sp-artist">${esc(r.artist)}</div>
       <div class="sp-title">${esc(r.title)}</div>
-      <div class="sp-meta">${esc(r.year||'')}${r.country?' · '+esc(r.country):''}${r.genre?' · '+esc(r.genre):''}</div>
-      ${tagsHtml}
+      <div class="sp-meta">${[r.year, r.country, r.genre].filter(Boolean).map(esc).join(' · ')}</div>
+      <div style="margin:6px 0">${tagsHtml}</div>
       <button class="sleeve-open-btn">Open full record ↗</button>`;
-    pop.querySelector('.sleeve-open-btn').addEventListener('click', (ev) => {
-      ev.stopPropagation();
+    pop.querySelector('.sleeve-open-btn').addEventListener('click', () => {
       pop.classList.remove('vis');
       toggleStore();
       openStoreRelease(r);
     });
-    // Position above sleeve — update on scroll so it follows
-    function positionPop() {
-      const rect = div.getBoundingClientRect();
-      // If sleeve has scrolled offscreen, close
-      if (rect.right < 0 || rect.left > window.innerWidth) {
-        pop.classList.remove('vis'); return;
-      }
-      const pw = 220, ph = 190;
-      let left = rect.left + rect.width / 2 - pw / 2;
-      left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-      let top = rect.top - ph - 12;
-      if (top < 8) top = rect.bottom + 12;
-      pop.style.left = left + 'px';
-      pop.style.top = top + 'px';
-    }
-    pop._positionFn = positionPop;
-    // Attach scroll listener to the shelf surface
-    const shelf = div.closest('.shelf-surface');
-    if (shelf) {
-      shelf.addEventListener('scroll', positionPop, { passive: true });
-      pop._shelf = shelf;
-    }
-    // Add vis BEFORE positioning so the check inside positionPop passes
+    // Position: above sleeve if room, else below
+    const rect = div.getBoundingClientRect();
+    const pw = 220, ph = 200;
+    let left = Math.round(rect.left + rect.width / 2 - pw / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    let top = rect.top - ph - 10;
+    if (top < 8) top = rect.bottom + 10;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
     pop.classList.add('vis');
-    positionPop();
+    // Reposition on shelf scroll
+    const shelf = div.closest('.shelf-surface');
+    if (shelf && !shelf._popListener) {
+      shelf._popListener = true;
+      shelf.addEventListener('scroll', () => {
+        const p = document.getElementById('store-popover');
+        if (!p || !p._sleeve || !p.classList.contains('vis')) return;
+        const r2 = p._sleeve.getBoundingClientRect();
+        if (r2.right < 0 || r2.left > window.innerWidth) { p.classList.remove('vis'); return; }
+        let l = Math.round(r2.left + r2.width / 2 - 110);
+        l = Math.max(8, Math.min(l, window.innerWidth - 228));
+        let t = r2.top - 210;
+        if (t < 8) t = r2.bottom + 10;
+        p.style.left = l + 'px';
+        p.style.top = t + 'px';
+      }, { passive: true });
+    }
   });
 
   sleeveObserver.observe(div);
@@ -2187,7 +2174,7 @@ const sleeveObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) {
       const sp = document.getElementById('store-popover');
-      if (sp && sp._sleeve === entry.target) sp.classList.remove('vis');
+      if (sp && sp._sleeve === entry.target) { sp.classList.remove('vis'); sp._sleeve = null; }
     }
   });
 }, { threshold: 0.3 });
