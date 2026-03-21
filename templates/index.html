@@ -2119,7 +2119,6 @@ function makeSleeve(r) {
     });
     // Position above sleeve — update on scroll so it follows
     function positionPop() {
-      if (!pop.classList.contains('vis')) return;
       const rect = div.getBoundingClientRect();
       // If sleeve has scrolled offscreen, close
       if (rect.right < 0 || rect.left > window.innerWidth) {
@@ -2140,8 +2139,9 @@ function makeSleeve(r) {
       shelf.addEventListener('scroll', positionPop, { passive: true });
       pop._shelf = shelf;
     }
-    positionPop();
+    // Add vis BEFORE positioning so the check inside positionPop passes
     pop.classList.add('vis');
+    positionPop();
   });
 
   sleeveObserver.observe(div);
