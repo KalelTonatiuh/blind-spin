@@ -2457,50 +2457,42 @@ async function loadStore() {
     body.appendChild(row);
   });
 
-  // Fetch all genres in parallel
+  // Fetch genres sequentially to avoid hammering Discogs rate limits
   let loaded = 0;
   status.textContent = `loading ${STORE_GENRES.length} shelves...`;
 
-  const fetches = STORE_GENRES.map(async genre => {
+  const GENRE_MAP = {
+    'Metal': { genre: 'Rock', style: 'Metal' },
+    'Blues': { genre: 'Blues' },
+    'Reggae': { genre: 'Reggae' },
+    'Pop': { genre: 'Pop' },
+    'Funk / Soul': { genre: 'Funk / Soul' },
+    'Folk, World, & Country': { genre: 'Folk, World, & Country' },
+  };
+
+  for (const genre of STORE_GENRES) {
     const results = [];
-    const promises = Array(5).fill(0).map(async () => {
+    const mapping = GENRE_MAP[genre] || { genre };
+    await Promise.allSettled(Array(5).fill(0).map(async () => {
       try {
-        // Map store genres to Discogs genre/style params
-        const GENRE_MAP = {
-          'Metal': { genre: 'Rock', style: 'Metal' },
-          'Blues': { genre: 'Blues' },
-          'Reggae': { genre: 'Reggae' },
-          'Pop': { genre: 'Pop' },
-          'Funk / Soul': { genre: 'Funk / Soul' },
-          'Folk, World, & Country': { genre: 'Folk, World, & Country' },
-        };
-        const mapping = GENRE_MAP[genre] || { genre };
         const params = new URLSearchParams(mapping);
         const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
         if (data.artist && data.title) results.push(data);
       } catch {}
-    });
-    await Promise.allSettled(promises);
+    }));
 
-    // Render results into shelf
     const container = document.getElementById('records-' + genre.replace(/[^a-z]/gi,'_'));
-    if (!container) return;
+    if (!container) continue;
     container.innerHTML = '';
-
     if (!results.length) {
       container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
     } else {
-      results.forEach(r => {
-        const s = makeSleeve(r);
-        container.appendChild(s);
-      });
+      results.forEach(r => container.appendChild(makeSleeve(r)));
     }
-
     loaded++;
     status.textContent = `${loaded} / ${STORE_GENRES.length} loaded`;
-  });
+  }
 
-  await Promise.allSettled(fetches);
   status.textContent = 'loaded';
 }
 
@@ -2575,7 +2567,8 @@ async function loadDecadeShelf(decade, range) {
     'Funk / Soul': { genre: 'Funk / Soul' },
   };
 
-  await Promise.allSettled(DECADE_GENRES.map(async genre => {
+  // Fetch genres sequentially to avoid hammering Discogs rate limits
+  for (const genre of DECADE_GENRES) {
     const results = [];
     const mapping = GENRE_MAP[genre] || { genre };
     await Promise.allSettled(Array(5).fill(0).map(async () => {
@@ -2587,14 +2580,14 @@ async function loadDecadeShelf(decade, range) {
     }));
     const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
     const el = document.getElementById('records-' + key);
-    if (!el) return;
+    if (!el) continue;
     el.innerHTML = '';
     if (!results.length) {
       el.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
     } else {
       results.forEach(r => el.appendChild(makeSleeve(r)));
     }
-  }));
+  }
 }
 
 async function refreshDecadeShelf(genre, decade) {

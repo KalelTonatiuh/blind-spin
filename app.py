@@ -174,17 +174,28 @@ def discogs_random():
     elif f_year_to:
         year_q = f"1900-{f_year_to}"
 
-    # With filters, probe page 1 first to get actual total pages, then pick randomly within range
     has_filters = any([f_genre, f_style, year_q, f_country, f_format])
+
+    # Estimate a safe page ceiling based on filter specificity
+    # Decade+genre combos vary widely — use a conservative range to avoid empty pages
+    if year_q and f_genre:
+        max_page = 50    # decade + genre: narrow
+    elif year_q:
+        max_page = 150   # decade only: moderate
+    elif f_genre or f_style:
+        max_page = 300   # genre only: broad
+    else:
+        max_page = 3000  # no filters: full catalogue
+
+    page = random.randint(1, max_page)
 
     search_url = f"{DISCOGS_BASE}/database/search"
     params = {
         "type":     "release",
-        "per_page": 10,
-        "page":     1,
+        "per_page": 50,   # larger batch so we always have results to pick from
+        "page":     page,
     }
 
-    # Apply filters
     if f_genre:   params["genre"]   = f_genre
     if f_style:   params["style"]   = f_style
     if year_q:    params["year"]    = year_q
@@ -194,43 +205,15 @@ def discogs_random():
         params["format"] = "album"
 
     try:
-        if has_filters:
-            # Probe page 1 to discover actual total pages for this filter combo
+        r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
+        # If we landed on an empty page, retry once with a lower page number
+        if r.status_code == 404 or (r.status_code == 200 and not r.json().get("results")):
+            params["page"] = random.randint(1, max(1, max_page // 4))
             r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
-            if r.status_code == 429:
-                return jsonify({"error": "discogs rate limited"}), 429
-            r.raise_for_status()
-            data = r.json()
-            pagination = data.get("pagination", {})
-            total_pages = pagination.get("pages", 1)
-            # Clamp to a safe max — very old decades may only have a handful of pages
-            max_page = min(total_pages, 500)
-            if max_page <= 1:
-                # Only one page — use whatever came back from the probe
-                results = data.get("results", [])
-            else:
-                # Pick a random page within the real range and fetch it
-                page = random.randint(1, max_page)
-                params["page"] = page
-                r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
-                if r.status_code == 404:
-                    # Fall back to page 1 data we already have
-                    results = data.get("results", [])
-                else:
-                    r.raise_for_status()
-                    results = r.json().get("results", [])
-        else:
-            # No filters — pick a random page from the full catalogue
-            page = random.randint(1, 5000)
-            params["page"] = page
-            r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
-            if r.status_code == 404:
-                params["page"] = random.randint(1, 500)
-                r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
-            if r.status_code == 429:
-                return jsonify({"error": "discogs rate limited"}), 429
-            r.raise_for_status()
-            results = r.json().get("results", [])
+        if r.status_code == 429:
+            return jsonify({"error": "discogs rate limited"}), 429
+        r.raise_for_status()
+        results = r.json().get("results", [])
     except Exception as e:
         return jsonify({"error": str(e)}), 502
     if not results:
