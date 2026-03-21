@@ -345,6 +345,24 @@
     flex: 1; min-height: 260px;
     background: linear-gradient(135deg, #1a1208 0%, #0e0c08 40%, #141008 100%);
   }
+  /* Film grain + edge burn — aged photograph feel */
+  .cbg::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    /* Noise grain */
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.06'/%3E%3C/svg%3E"),
+      /* Corner burns */
+      radial-gradient(ellipse at 0% 0%, rgba(0,0,0,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 0%, rgba(0,0,0,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(0,0,0,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(0,0,0,0.35) 0%, transparent 55%),
+      /* Subtle horizontal scan-line texture */
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 3px,
+        rgba(0,0,0,0.015) 3px, rgba(0,0,0,0.015) 4px
+      );
+    mix-blend-mode: multiply;
+  }
   .cbg-wash {
     position: absolute; inset: -20px; background-size: cover; background-position: center;
     filter: blur(28px) brightness(0.28) saturate(1.4);
@@ -388,7 +406,36 @@
     background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.45) 50%);
   }
   .cov img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 10px; line-height: 1.6; }
+  .cnone {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px;
+    /* Kraft paper — warm brown with subtle grain */
+    background:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.08'/%3E%3C/svg%3E"),
+      repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(0,0,0,0.04) 18px, rgba(0,0,0,0.04) 19px),
+      linear-gradient(160deg, #3a2a14 0%, #2e2010 40%, #3a2a14 100%);
+    /* Worn edges */
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.4), inset 0 0 8px rgba(0,0,0,0.3);
+  }
+  /* Circular label area in center of blank sleeve */
+  .cnone::before {
+    content: ''; display: block;
+    width: 72px; height: 72px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, #5a4020 0%, #3a2810 50%, #2a1c08 100%);
+    border: 1px solid rgba(180,130,60,0.2);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+  /* Spindle hole */
+  .cnone::after {
+    content: ''; position: absolute;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #1a0e06;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+    /* Centre on the label circle — label is ~72px, offset from top ~64px */
+    top: calc(50% - 5px); left: calc(50% - 5px);
+  }
 
   .cmeta { position: relative; z-index: 1; flex: 1; min-width: 0; padding-bottom: 4px; }
   .csrc {
@@ -963,23 +1010,70 @@
   }
   .tray-search:focus { border-color: #c8a040; box-shadow: inset 0 1px 3px rgba(0,0,0,0.15), 0 0 0 2px rgba(200,160,64,0.15); }
   .tray-search::placeholder { color: #8a7050; font-style: italic; }
-  .tray-scroll { display: flex; gap: 8px; padding: 8px 16px 10px; overflow-x: auto; scrollbar-width: none; }
+  .tray-scroll {
+    display: flex; gap: 3px; padding: 10px 16px 12px;
+    overflow-x: auto; scrollbar-width: none;
+    align-items: flex-end;
+  }
   .tray-scroll::-webkit-scrollbar { display: none; }
+
+  /* Record spine in crate — tall narrow card sticking up */
   .tray-item {
-    flex-shrink: 0; width: 64px; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    opacity: 0.7; transition: opacity 0.15s;
+    flex-shrink: 0;
+    width: 42px; height: 80px;
+    cursor: pointer; position: relative;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transform-origin: bottom center;
   }
-  .tray-item:hover { opacity: 1; }
+  .tray-item:hover { transform: translateY(-10px); z-index: 2; }
+  .tray-item:nth-child(odd)  { transform: rotate(-0.3deg); }
+  .tray-item:nth-child(even) { transform: rotate(0.2deg); }
+  .tray-item:nth-child(odd):hover  { transform: translateY(-10px) rotate(0deg); }
+  .tray-item:nth-child(even):hover { transform: translateY(-10px) rotate(0deg); }
+
   .tray-thumb {
-    width: 54px; height: 54px; background: #1a1208;
-    border: 1px solid #2a2010; overflow: hidden; flex-shrink: 0;
+    width: 100%; height: 100%;
+    background: #1a1208;
+    border: 1px solid #2a2010;
+    overflow: hidden; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow:
+      2px 0 0 #0a0804,
+      3px 2px 0 #060402,
+      -1px 0 3px rgba(0,0,0,0.4),
+      0 4px 12px rgba(0,0,0,0.7);
   }
-  .tray-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .tray-thumb-none { font-size: 1rem; opacity: 0.2; }
-  .tray-item-title { font-size: 0.42rem; color: #5a4820; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 64px; letter-spacing: 0.04em; }
-  .tray-item.fav .tray-thumb { border-color: #7a5020; box-shadow: 0 0 6px rgba(200,160,64,0.2); }
+  .tray-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Ring-stain overlay */
+  .tray-thumb::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    background-image:
+      radial-gradient(ellipse 32px 30px at 62% 55%, transparent 60%, rgba(160,110,40,0.08) 61%, rgba(160,110,40,0.1) 63%, transparent 64%);
+  }
+  /* Worn corner dog-ear */
+  .tray-thumb::after {
+    content: ''; position: absolute; bottom: 0; right: 0; z-index: 3;
+    width: 10px; height: 10px; pointer-events: none;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.45) 50%);
+  }
+  .tray-thumb-none { font-size: 0.9rem; opacity: 0.15; }
+  .tray-item-title {
+    display: none; /* title shown on hover via spine, not below */
+  }
+  /* Spine label — vertical text on left edge */
+  .tray-item::before {
+    content: attr(data-title);
+    position: absolute; left: 0; top: 0; bottom: 0; width: 12px; z-index: 4;
+    background: linear-gradient(to right, #1a1208, #221810);
+    border-right: 1px solid rgba(0,0,0,0.3);
+    writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);
+    font-size: 0.38rem; color: rgba(200,169,110,0.45); letter-spacing: 0.08em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 1px;
+  }
+  .tray-item.fav .tray-thumb { border-color: #7a5020; box-shadow: 2px 0 0 #0a0804, 3px 2px 0 #060402, 0 0 8px rgba(200,160,64,0.2); }
 
   /* Tray toggle button — looks like a physical pull-tab on a drawer */
   .tray-btn {
@@ -2374,7 +2468,7 @@ function renderTray() {
       ? `<img src="${escA(r.cover)}" alt="" onerror="this.parentElement.innerHTML='<span class=\'tray-thumb-none\'>◈</span>'">`
       : '<span class="tray-thumb-none">◈</span>';
     const isFav = trayTab === 'favs';
-    return `<div class="tray-item${isFav ? ' fav' : ''}" onclick="openTrayItem(${all.indexOf(r)})">
+    return `<div class="tray-item${isFav ? ' fav' : ''}" data-title="${esc((r.artist||'') + ' — ' + (r.title||''))}" onclick="openTrayItem(${all.indexOf(r)})">
       <div class="tray-thumb">${thumb}</div>
       <div class="tray-item-title">${esc(r.title || '')}</div>
     </div>`;
