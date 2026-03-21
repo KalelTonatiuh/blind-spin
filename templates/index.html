@@ -199,91 +199,6 @@
   .card.on { display: flex; flex-direction: column; height: 100%; animation: fu 0.3s ease; }
   @keyframes fu { from { opacity:0; } to { opacity:1; } }
 
-  /* ── BLIND MODE ── */
-  /* Elements hidden while blind */
-  .card.blind .cart,
-  .card.blind .ctit,
-  .card.blind .csrc,
-  .card.blind #lrow,
-  .card.blind #blurbsec,
-  .card.blind #inforow,
-  .card.blind #dsec2,
-  .card.blind #infosec,
-  .card.blind #gsec,
-  .card.blind #ssec,
-  .card.blind #dsec,
-  .card.blind .sim-btn,
-  .card.blind .fav-btn,
-  .card.blind .note {
-    visibility: hidden;
-    pointer-events: none;
-  }
-  /* Cover replaced by vinyl when blind — overlay spins on top */
-  .blind-vinyl-overlay {
-    display: none;
-    position: absolute; inset: 0; z-index: 10;
-    background: #0a0806;
-    align-items: center; justify-content: center;
-  }
-  .card.blind .blind-vinyl-overlay { display: flex; }
-  .blind-vinyl-overlay svg {
-    width: 90%; height: 90%;
-    animation: slow-spin 18s linear infinite;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8));
-  }
-
-  /* Reveal button — stamped into the card bottom, centered */
-  .reveal-btn {
-    display: none;
-    margin: 0 auto 0; width: fit-content;
-    cursor: pointer; position: relative; z-index: 2;
-    font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    padding: 10px 28px;
-    color: #c8a040;
-    background: linear-gradient(to bottom, #2e2410 0%, #1e1808 100%);
-    border: 1px solid #6a5020;
-    border-bottom: 3px solid #0e0a04;
-    border-radius: 2px;
-    box-shadow:
-      0 4px 0 #0a0804,
-      0 6px 12px rgba(0,0,0,0.7),
-      inset 0 1px 0 rgba(255,200,80,0.1),
-      inset 0 -1px 0 rgba(0,0,0,0.3);
-    transition: transform 0.08s ease, box-shadow 0.08s ease, color 0.1s;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  }
-  .reveal-btn::before {
-    /* Worn rubber texture */
-    content: ''; position: absolute; inset: 0; border-radius: 2px;
-    background: radial-gradient(circle at 28% 28%, rgba(255,200,80,0.05) 0%, transparent 65%);
-    pointer-events: none;
-  }
-  .reveal-btn:hover {
-    color: #e8c050;
-    background: linear-gradient(to bottom, #3a2e18 0%, #2a2010 100%);
-    box-shadow: 0 4px 0 #0a0804, 0 6px 14px rgba(0,0,0,0.75),
-      inset 0 1px 0 rgba(255,200,80,0.15);
-  }
-  .reveal-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #0a0804, 0 2px 4px rgba(0,0,0,0.5),
-      inset 0 2px 5px rgba(0,0,0,0.3);
-  }
-  .card.blind .reveal-btn { display: block; }
-
-  /* Blind toggle button in header — active state */
-  .blind-btn.on {
-    color: #c8a040 !important;
-    background-image:
-      radial-gradient(circle at 30% 30%, rgba(255,200,80,0.08) 0%, transparent 60%),
-      linear-gradient(160deg, #1a1408 0%, #161008 100%) !important;
-    box-shadow: 0 1px 0 #0a0804, 0 2px 4px rgba(0,0,0,0.5),
-      inset 0 2px 5px rgba(0,0,0,0.5),
-      inset 0 0 8px rgba(200,160,64,0.12) !important;
-    transform: translateY(3px) !important;
-  }
-
   /* Blurred cover wash fills the top section */
   .cbg {
     position: relative; overflow: hidden;
@@ -707,6 +622,128 @@
   .store-status { font-size: 0.54rem; color: #6a5030; letter-spacing: 0.1em; }
 
   .store-body { padding: 0 0 40px; }
+
+  /* ── DECADE CRATE DIVIDERS ── */
+  .decade-bar {
+    position: sticky; top: 57px; z-index: 9;
+    display: flex; align-items: flex-end; gap: 4px;
+    padding: 0 24px 0;
+    /* Dark wood rail the dividers sit on */
+    background:
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 8px,
+        rgba(0,0,0,0.06) 8px, rgba(0,0,0,0.06) 9px
+      ),
+      linear-gradient(to bottom, #1a1208, #0e0904);
+    border-bottom: 3px solid #0a0804;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.05);
+    overflow-x: auto; overflow-y: visible;
+    scrollbar-width: none;
+  }
+  .decade-bar::-webkit-scrollbar { display: none; }
+
+  /* Individual crate divider tab */
+  .decade-tab {
+    flex-shrink: 0; cursor: pointer; position: relative;
+    width: 52px; padding: 16px 0 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.64rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: #7a5c30;
+    /* Aged cardboard divider — warm cream with grain */
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 14px,
+        rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 15px
+      ),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 8px,
+        rgba(255,200,80,0.03) 8px, rgba(255,200,80,0.03) 9px
+      ),
+      linear-gradient(to bottom, #d4c080 0%, #c0a860 40%, #b09448 100%);
+    border: 1px solid #8a7040;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    box-shadow:
+      2px 0 0 rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,200,0.35),
+      inset 1px 0 0 rgba(255,255,200,0.1);
+    text-shadow: 0 1px 0 rgba(255,255,200,0.4);
+    transition: background 0.1s, color 0.1s, transform 0.1s;
+    /* Slight random tilt — hand-inserted divider feel */
+    transform-origin: bottom center;
+  }
+  .decade-tab:nth-child(odd)  { transform: rotate(-0.4deg); }
+  .decade-tab:nth-child(even) { transform: rotate(0.3deg);  }
+  /* Worn top-right dog-ear */
+  .decade-tab::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 9px; height: 9px;
+    background: linear-gradient(225deg, rgba(0,0,0,0.22) 50%, transparent 50%);
+  }
+  /* Stencilled label mark at top */
+  .decade-tab::before {
+    content: ''; position: absolute; top: 5px; left: 50%;
+    transform: translateX(-50%);
+    width: 28px; height: 2px;
+    background: rgba(60,40,10,0.2);
+    border-radius: 1px;
+  }
+  .decade-tab:hover {
+    color: #3a2810;
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 14px,
+        rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 15px
+      ),
+      linear-gradient(to bottom, #e8d890 0%, #d4b868 40%, #c4a850 100%);
+    transform: translateY(-3px) rotate(0deg) !important;
+  }
+  .decade-tab.active {
+    color: #1a0e04;
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 14px,
+        rgba(0,0,0,0.07) 14px, rgba(0,0,0,0.07) 15px
+      ),
+      linear-gradient(to bottom, #f0e098 0%, #dcc070 40%, #c8a848 100%);
+    transform: translateY(-5px) rotate(0deg) !important;
+    box-shadow:
+      2px 0 0 rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,220,0.5),
+      0 -2px 8px rgba(200,160,40,0.2);
+    z-index: 2;
+  }
+
+  /* "All" tab — slightly different, acts as reset */
+  .decade-tab.all-tab {
+    width: 38px; font-size: 0.56rem;
+    background:
+      linear-gradient(to bottom, #b0a070 0%, #9a8858 40%, #8a7848 100%);
+    color: #e8dfc0;
+    border-color: #6a5830;
+  }
+  .decade-tab.all-tab:hover, .decade-tab.all-tab.active {
+    background: linear-gradient(to bottom, #c0b080 0%, #a89860 100%);
+    color: #f8f0d8;
+  }
+
+  /* Decade section within store body */
+  .decade-section { display: none; }
+  .decade-section.vis { display: block; }
+  .decade-section-hdr {
+    display: flex; align-items: center; gap: 16px;
+    padding: 24px 28px 0;
+  }
+  .decade-section-title {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 1.6rem; color: #c8a96e;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+  .decade-section-rule {
+    flex: 1; height: 1px;
+    background: linear-gradient(to right, rgba(180,140,60,0.3), transparent);
+  }
 
   /* Shelf row */
   .shelf-row {
@@ -1170,7 +1207,6 @@
   <div class="hdr">
     <div class="wm">Blind Spin</div>
     <button class="filter-btn" id="storebtn" onclick="toggleStore()">Browse</button>
-    <button class="filter-btn blind-btn" id="blindbtn" onclick="toggleBlind()">Blind</button>
     <button class="filter-btn" id="filterbtn" onclick="toggleFilters()">Filters</button>
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
@@ -1374,67 +1410,7 @@
         <div class="cbg">
           <div class="cbg-wash" id="cbg-wash"></div>
           <div class="cbg-vignette"></div>
-          <div class="cov" id="cov">
-            <div class="cnone">no art</div>
-            <!-- Blind mode vinyl overlay — shown instead of cover art -->
-            <div class="blind-vinyl-overlay" id="blind-vinyl-overlay">
-              <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <radialGradient id="bv-body" cx="42%" cy="38%" r="55%">
-                    <stop offset="0%"  stop-color="#2a2820"/>
-                    <stop offset="30%" stop-color="#141210"/>
-                    <stop offset="70%" stop-color="#0c0a08"/>
-                    <stop offset="100%" stop-color="#181614"/>
-                  </radialGradient>
-                  <radialGradient id="bv-sheen" cx="35%" cy="30%" r="60%">
-                    <stop offset="0%"  stop-color="rgba(200,180,120,0.18)"/>
-                    <stop offset="40%" stop-color="rgba(180,160,100,0.06)"/>
-                    <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-                  </radialGradient>
-                  <radialGradient id="bv-label" cx="50%" cy="40%" r="55%">
-                    <stop offset="0%"  stop-color="#c8a060"/>
-                    <stop offset="50%" stop-color="#a07838"/>
-                    <stop offset="100%" stop-color="#7a5820"/>
-                  </radialGradient>
-                  <clipPath id="bv-clip"><circle cx="160" cy="160" r="138"/></clipPath>
-                </defs>
-                <circle cx="160" cy="160" r="138" fill="url(#bv-body)"/>
-                <g clip-path="url(#bv-clip)" opacity="0.55">
-                  <circle cx="160" cy="160" r="135" fill="none" stroke="#1e1c18" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="129" fill="none" stroke="#1a1816" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="123" fill="none" stroke="#1c1a16" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="117" fill="none" stroke="#1a1816" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="111" fill="none" stroke="#201e1a" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="105" fill="none" stroke="#1e1c18" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="99"  fill="none" stroke="#1a1816" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="93"  fill="none" stroke="#201e1a" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="87"  fill="none" stroke="#1e1c18" stroke-width="0.8"/>
-                  <circle cx="160" cy="160" r="80"  fill="none" stroke="#0c0a08" stroke-width="4"/>
-                </g>
-                <circle cx="160" cy="160" r="142" fill="url(#bv-sheen)" opacity="0.3"/>
-                <circle cx="160" cy="160" r="56" fill="url(#bv-label)"/>
-                <circle cx="160" cy="160" r="54.5" fill="none" stroke="rgba(60,30,5,0.7)" stroke-width="1.8"/>
-                <path id="bv-top-arc" d="M 118 145 A 46 46 0 0 1 202 145" fill="none"/>
-                <text font-family="'IBM Plex Mono', monospace" font-size="5.5" fill="rgba(30,12,2,0.7)" letter-spacing="2.5">
-                  <textPath href="#bv-top-arc" startOffset="50%" text-anchor="middle">BLIND SPIN RECORDS</textPath>
-                </text>
-                <text x="160" y="157" text-anchor="middle" font-family="'Cormorant Garamond', serif"
-                      font-style="italic" font-weight="600" font-size="14" fill="rgba(25,10,2,0.95)" letter-spacing="0.3">?</text>
-                <line x1="122" y1="161" x2="198" y2="161" stroke="rgba(60,30,5,0.4)" stroke-width="0.6"/>
-                <text x="160" y="169" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
-                      font-size="5" fill="rgba(30,12,2,0.65)" letter-spacing="1">BS-????</text>
-                <path id="bv-bot-arc" d="M 130 174 A 32 32 0 0 0 190 174" fill="none"/>
-                <text font-family="'IBM Plex Mono', monospace" font-size="4.5" fill="rgba(30,12,2,0.45)" letter-spacing="1.5">
-                  <textPath href="#bv-bot-arc" startOffset="50%" text-anchor="middle">33⅓ RPM · STEREO</textPath>
-                </text>
-                <circle cx="160" cy="160" r="6" fill="#120a04"/>
-                <circle cx="160" cy="160" r="4.5" fill="#0a0602"/>
-                <circle cx="160" cy="160" r="3" fill="#060402"/>
-                <circle cx="160" cy="160" r="1.5" fill="#030201"/>
-                <circle cx="160" cy="160" r="138" fill="none" stroke="#3a3228" stroke-width="1.5"/>
-              </svg>
-            </div>
-          </div>
+          <div class="cov" id="cov"><div class="cnone">no art</div></div>
           <div class="cmeta">
             <div class="csrc" id="csrc"></div>
             <div class="cart" id="cart"></div>
@@ -1456,7 +1432,6 @@
               <div class="tlist" id="tlist2"></div>
             </div>
           </div>
-          <button class="reveal-btn" id="revealbtn" onclick="revealCard()">↳ Reveal</button>
           <div class="lrow" id="lrow"></div>
           <button class="fav-btn" id="favbtn" onclick="toggleFav()"><span id="favstar">☆</span> Add to Favorites</button>
           <button class="sim-btn" id="simbtn" onclick="spinSimilar()">Similar ↻</button>
@@ -1495,7 +1470,27 @@
       <span class="store-status" id="store-status"></span>
       <button class="store-close" onclick="toggleStore()">✕ Close</button>
     </div>
+    <!-- Decade crate dividers -->
+    <div class="decade-bar" id="decade-bar">
+      <div class="decade-tab all-tab active" data-decade="all" onclick="selectDecade(this,'all')">All</div>
+      <div class="decade-tab" data-decade="20s" onclick="selectDecade(this,'20s')">20s</div>
+      <div class="decade-tab" data-decade="10s" onclick="selectDecade(this,'10s')">10s</div>
+      <div class="decade-tab" data-decade="00s" onclick="selectDecade(this,'00s')">00s</div>
+      <div class="decade-tab" data-decade="90s" onclick="selectDecade(this,'90s')">90s</div>
+      <div class="decade-tab" data-decade="80s" onclick="selectDecade(this,'80s')">80s</div>
+      <div class="decade-tab" data-decade="70s" onclick="selectDecade(this,'70s')">70s</div>
+      <div class="decade-tab" data-decade="60s" onclick="selectDecade(this,'60s')">60s</div>
+      <div class="decade-tab" data-decade="50s" onclick="selectDecade(this,'50s')">50s</div>
+    </div>
     <div class="store-body" id="store-body"></div>
+    <!-- Decade section — rendered on demand below genre shelves -->
+    <div class="decade-section" id="decade-section">
+      <div class="decade-section-hdr">
+        <div class="decade-section-title" id="decade-section-title"></div>
+        <div class="decade-section-rule"></div>
+      </div>
+      <div id="decade-shelves"></div>
+    </div>
   </div>
 </div>
 
@@ -1527,30 +1522,6 @@ document.addEventListener('keydown', e => {
 });
 
 // ── NOTE: constants defined below in mbViaProxy section ─────────────────────────────────────────────────────────────────────
-
-// ── BLIND MODE ────────────────────────────────────────────────────────────────
-let blindMode = false;
-
-function toggleBlind() {
-  blindMode = !blindMode;
-  document.getElementById('blindbtn').classList.toggle('on', blindMode);
-  // If a card is currently showing, apply/remove blind immediately
-  const card = document.getElementById('card');
-  if (card.classList.contains('on')) {
-    if (blindMode) {
-      card.classList.add('blind');
-    } else {
-      card.classList.remove('blind');
-    }
-  }
-  log(`blind mode ${blindMode ? 'on' : 'off'}`, 'info');
-}
-
-function revealCard() {
-  const card = document.getElementById('card');
-  card.classList.remove('blind');
-  log('revealed.', 'ok');
-}
 
 // ── FILTERS ──────────────────────────────────────────────────────────────────
 function getFilters() {
@@ -1941,12 +1912,6 @@ function render(r) {
   updateFavBtn();
 
   showCard();
-  // Apply blind mode after card is shown
-  if (blindMode) {
-    document.getElementById('card').classList.add('blind');
-  } else {
-    document.getElementById('card').classList.remove('blind');
-  }
   log('rendered.', 'ok');
 
   // Fire info fetches async — don't block render
@@ -2363,6 +2328,123 @@ async function loadStore() {
 
   await Promise.allSettled(fetches);
   status.textContent = 'loaded';
+}
+
+// ── DECADE BROWSER ────────────────────────────────────────────────────────────
+const DECADE_RANGES = {
+  '20s': { from: 2020, to: 2029, label: '2020s' },
+  '10s': { from: 2010, to: 2019, label: '2010s' },
+  '00s': { from: 2000, to: 2009, label: '2000s' },
+  '90s': { from: 1990, to: 1999, label: '1990s' },
+  '80s': { from: 1980, to: 1989, label: '1980s' },
+  '70s': { from: 1970, to: 1979, label: '1970s' },
+  '60s': { from: 1960, to: 1969, label: '1960s' },
+  '50s': { from: 1950, to: 1959, label: '1950s' },
+};
+const decadeLoaded = {};
+
+function selectDecade(tabEl, decade) {
+  // Update active tab
+  document.querySelectorAll('.decade-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+
+  const storeBody  = document.getElementById('store-body');
+  const decadeSec  = document.getElementById('decade-section');
+
+  if (decade === 'all') {
+    // Show genre shelves, hide decade section
+    storeBody.style.display = '';
+    decadeSec.classList.remove('vis');
+    return;
+  }
+
+  // Hide genre shelves, show decade section
+  storeBody.style.display = 'none';
+  decadeSec.classList.add('vis');
+
+  const range = DECADE_RANGES[decade];
+  document.getElementById('decade-section-title').textContent = range.label;
+
+  if (!decadeLoaded[decade]) {
+    decadeLoaded[decade] = true;
+    loadDecadeShelf(decade, range);
+  }
+}
+
+async function loadDecadeShelf(decade, range) {
+  const container = document.getElementById('decade-shelves');
+
+  // Build one shelf per store genre for this decade
+  container.innerHTML = '';
+  const DECADE_GENRES = ['Rock', 'Electronic', 'Jazz', 'Hip Hop', 'Classical', 'Folk, World, & Country', 'Funk / Soul', 'Blues', 'Reggae', 'Pop'];
+
+  DECADE_GENRES.forEach(genre => {
+    const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
+    const row = document.createElement('div');
+    row.className = 'shelf-row';
+    row.innerHTML = `
+      <div class="shelf-label-row">
+        <span class="shelf-label">${genre}</span>
+        <button class="shelf-refresh" onclick="refreshDecadeShelf('${genre}','${decade}')" title="Refresh">↻</button>
+      </div>
+      <div class="shelf-surface">
+        <div class="shelf-records" id="records-${key}">
+          ${Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('')}
+        </div>
+      </div>`;
+    container.appendChild(row);
+  });
+
+  // Fetch all in parallel
+  const GENRE_MAP = {
+    'Folk, World, & Country': { genre: 'Folk, World, & Country' },
+    'Funk / Soul': { genre: 'Funk / Soul' },
+  };
+
+  await Promise.allSettled(DECADE_GENRES.map(async genre => {
+    const results = [];
+    const mapping = GENRE_MAP[genre] || { genre };
+    await Promise.allSettled(Array(5).fill(0).map(async () => {
+      try {
+        const params = new URLSearchParams({ ...mapping, yearFrom: range.from, yearTo: range.to });
+        const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
+        if (data.artist && data.title) results.push(data);
+      } catch {}
+    }));
+    const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
+    const el = document.getElementById('records-' + key);
+    if (!el) return;
+    el.innerHTML = '';
+    if (!results.length) {
+      el.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
+    } else {
+      results.forEach(r => el.appendChild(makeSleeve(r)));
+    }
+  }));
+}
+
+async function refreshDecadeShelf(genre, decade) {
+  const range = DECADE_RANGES[decade];
+  const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
+  const el = document.getElementById('records-' + key);
+  if (!el) return;
+  el.innerHTML = Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('');
+  const GENRE_MAP = { 'Folk, World, & Country': { genre: 'Folk, World, & Country' }, 'Funk / Soul': { genre: 'Funk / Soul' } };
+  const mapping = GENRE_MAP[genre] || { genre };
+  const results = [];
+  await Promise.allSettled(Array(5).fill(0).map(async () => {
+    try {
+      const params = new URLSearchParams({ ...mapping, yearFrom: range.from, yearTo: range.to });
+      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
+      if (data.artist && data.title) results.push(data);
+    } catch {}
+  }));
+  el.innerHTML = '';
+  if (!results.length) {
+    el.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
+  } else {
+    results.forEach(r => el.appendChild(makeSleeve(r)));
+  }
 }
 
 function makeSleeve(r) {
