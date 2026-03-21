@@ -192,22 +192,35 @@
   .cov {
     position: relative; z-index: 1;
     width: 200px; height: 200px; flex-shrink: 0;
-    background: var(--surface); overflow: hidden;
+    background: #080604; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    /* Inset sleeve slot — deep shadow inside, raised outer edge */
+    /* Slot: thick cardboard-style border + deep inset shadow */
+    outline: 2px solid #080604;
+    outline-offset: 0;
     box-shadow:
-      0 8px 40px rgba(0,0,0,0.8),
-      0 0 0 2px #0a0806,
-      0 0 0 3px #3a2c14,
-      inset 0 2px 8px rgba(0,0,0,0.6),
-      inset 0 0 0 1px rgba(0,0,0,0.4);
+      /* Outer drop shadow */
+      0 10px 50px rgba(0,0,0,0.85),
+      /* Raised cardboard rim */
+      0 0 0 3px #2a1e0c,
+      0 0 0 5px #0e0906,
+      /* Deep inset — light from top, dark at bottom */
+      inset 0 3px 10px rgba(0,0,0,0.7),
+      inset 0 -2px 6px rgba(0,0,0,0.4),
+      inset 3px 0 6px rgba(0,0,0,0.3),
+      inset -3px 0 6px rgba(0,0,0,0.3);
     border-radius: 1px;
   }
-  /* Worn corner dog-ears on cover */
+  /* Sleeve slot top-edge highlight — light catching the rim */
+  .cov::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(to bottom, rgba(255,200,100,0.12), transparent);
+    pointer-events: none; z-index: 3;
+  }
+  /* Worn corner dog-ear bottom-right */
   .cov::before {
     content: ''; position: absolute; bottom: 0; right: 0; z-index: 2;
-    width: 18px; height: 18px; pointer-events: none;
-    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.35) 50%);
+    width: 22px; height: 22px; pointer-events: none;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.45) 50%);
   }
   .cov img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 10px; line-height: 1.6; }
@@ -535,18 +548,9 @@
   .store-overlay {
     display: none; position: fixed; inset: 0; z-index: 1000;
     overflow-y: auto; overscroll-behavior: contain; flex-direction: column;
-    /* Dark damask wallpaper — repeating diamond/floral pattern */
-    background-color: #110c06;
-    background-image:
-      radial-gradient(ellipse 18px 24px at 50% 0%, rgba(80,50,15,0.18) 0%, transparent 70%),
-      radial-gradient(ellipse 18px 24px at 50% 100%, rgba(80,50,15,0.18) 0%, transparent 70%),
-      radial-gradient(ellipse 24px 18px at 0% 50%, rgba(80,50,15,0.18) 0%, transparent 70%),
-      radial-gradient(ellipse 24px 18px at 100% 50%, rgba(80,50,15,0.18) 0%, transparent 70%),
-      radial-gradient(circle 6px at 50% 50%, rgba(100,65,20,0.12) 0%, transparent 100%),
-      radial-gradient(circle 2px at 25% 25%, rgba(120,80,25,0.1) 0%, transparent 100%),
-      radial-gradient(circle 2px at 75% 75%, rgba(120,80,25,0.1) 0%, transparent 100%),
-      linear-gradient(to bottom, #130e07, #0e0a05);
-    background-size: 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, auto;
+    background-color: #0d0805;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%230d0805'/%3E%3Cg fill='none' stroke='%23503018' stroke-width='1' opacity='0.7'%3E%3C!-- outer diamond frame --%3E%3Cpath d='M60 8 L112 60 L60 112 L8 60 Z'/%3E%3C!-- inner diamond --%3E%3Cpath d='M60 26 L94 60 L60 94 L26 60 Z'/%3E%3C!-- corner petals --%3E%3Cpath d='M8 60 Q17 46 26 60 Q17 74 8 60 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M112 60 Q103 46 94 60 Q103 74 112 60 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M60 8 Q46 17 60 26 Q74 17 60 8 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3Cpath d='M60 112 Q46 103 60 94 Q74 103 60 112 Z' fill='%23301808' stroke='%23604020' stroke-width='0.8'/%3E%3C!-- diagonal spurs --%3E%3Cpath d='M26 60 Q43 43 60 26' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M94 60 Q77 43 60 26' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M26 60 Q43 77 60 94' stroke-width='0.6' stroke='%23402510'/%3E%3Cpath d='M94 60 Q77 77 60 94' stroke-width='0.6' stroke='%23402510'/%3E%3C!-- center rosette --%3E%3Ccircle cx='60' cy='60' r='10' fill='%23281408' stroke='%23604020' stroke-width='1'/%3E%3Ccircle cx='60' cy='60' r='6' fill='none' stroke='%23503018' stroke-width='0.8'/%3E%3Ccircle cx='60' cy='60' r='2.5' fill='%23604020'/%3E%3C!-- corner dots --%3E%3Ccircle cx='60' cy='8' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='60' cy='112' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='8' cy='60' r='2' fill='%23503018' stroke='none'/%3E%3Ccircle cx='112' cy='60' r='2' fill='%23503018' stroke='none'/%3E%3C!-- tile corner connectors --%3E%3Cpath d='M0 0 Q8 8 0 16' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M120 0 Q112 8 120 16' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M0 120 Q8 112 0 104' stroke='%23402010' stroke-width='0.6'/%3E%3Cpath d='M120 120 Q112 112 120 104' stroke='%23402010' stroke-width='0.6'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 120px;
   }
   .store-overlay.open { display: flex; }
 
@@ -1147,25 +1151,37 @@
     <!-- Groove light sheen — stays on disc, subtle base sheen only -->
     <circle cx="160" cy="160" r="142" fill="url(#groove-sheen)" opacity="0.3"/>
 
-    <!-- ── LABEL ── -->
-    <!-- Label background -->
-    <circle cx="160" cy="160" r="52" fill="url(#label-bg)"/>
-    <!-- Label texture rings -->
-    <circle cx="160" cy="160" r="50" fill="none" stroke="rgba(120,80,20,0.4)" stroke-width="0.5"/>
-    <circle cx="160" cy="160" r="46" fill="none" stroke="rgba(100,70,15,0.3)" stroke-width="0.5"/>
-    <!-- Label inner ring -->
-    <circle cx="160" cy="160" r="40" fill="none" stroke="rgba(180,130,50,0.35)" stroke-width="1"/>
-    <!-- Label text -->
-    <text x="150" y="140" text-anchor="middle" font-family="'Cormorant Garamond', serif"
-          font-style="italic" font-size="10" fill="rgba(40,20,5,0.9)" letter-spacing="0.5">Blind Spin</text>
-    <text x="150" y="152" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
-          font-size="5.5" fill="rgba(40,20,5,0.6)" letter-spacing="1.5">SIDE A</text>
-    <text x="150" y="163" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
-          font-size="4.5" fill="rgba(40,20,5,0.5)" letter-spacing="0.8">RANDOM RELEASE</text>
-    <!-- Spindle hole -->
-    <circle cx="160" cy="160" r="5" fill="#0a0808"/>
-    <circle cx="160" cy="160" r="3" fill="#141210"/>
-    <circle cx="160" cy="160" r="1.5" fill="#0a0808"/>
+    <!-- ── LABEL — detailed record label ── -->
+    <circle cx="160" cy="160" r="56" fill="url(#label-bg)"/>
+    <!-- Printed border rings -->
+    <circle cx="160" cy="160" r="54.5" fill="none" stroke="rgba(60,30,5,0.7)" stroke-width="1.8"/>
+    <circle cx="160" cy="160" r="52" fill="none" stroke="rgba(60,30,5,0.2)" stroke-width="0.5"/>
+    <!-- Record company name arc at top -->
+    <path id="top-arc" d="M 118 145 A 46 46 0 0 1 202 145" fill="none"/>
+    <text font-family="'IBM Plex Mono', monospace" font-size="5.5" fill="rgba(30,12,2,0.7)" letter-spacing="2.5">
+      <textPath href="#top-arc" startOffset="50%" text-anchor="middle">BLIND SPIN RECORDS</textPath>
+    </text>
+    <!-- Main title -->
+    <text x="160" y="157" text-anchor="middle" font-family="'Cormorant Garamond', serif"
+          font-style="italic" font-weight="600" font-size="14" fill="rgba(25,10,2,0.95)" letter-spacing="0.3">Blind Spin</text>
+    <!-- Thin rule -->
+    <line x1="122" y1="161" x2="198" y2="161" stroke="rgba(60,30,5,0.4)" stroke-width="0.6"/>
+    <!-- Catalog + side row -->
+    <text x="148" y="169" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
+          font-size="5" fill="rgba(30,12,2,0.65)" letter-spacing="1">BS-2025</text>
+    <text x="174" y="169" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
+          font-size="5" fill="rgba(30,12,2,0.65)" letter-spacing="1">SIDE A</text>
+    <line x1="160" y1="163" x2="160" y2="172" stroke="rgba(60,30,5,0.25)" stroke-width="0.5"/>
+    <!-- RPM arc at bottom -->
+    <path id="bot-arc" d="M 130 174 A 32 32 0 0 0 190 174" fill="none"/>
+    <text font-family="'IBM Plex Mono', monospace" font-size="4.5" fill="rgba(30,12,2,0.45)" letter-spacing="1.5">
+      <textPath href="#bot-arc" startOffset="50%" text-anchor="middle">33⅓ RPM · STEREO</textPath>
+    </text>
+    <!-- Center spindle hole — layered for depth -->
+    <circle cx="160" cy="160" r="6" fill="#120a04"/>
+    <circle cx="160" cy="160" r="4.5" fill="#0a0602"/>
+    <circle cx="160" cy="160" r="3" fill="#060402"/>
+    <circle cx="160" cy="160" r="1.5" fill="#030201"/>
 
     <!-- Outer edge ring (slight raised rim) -->
     <circle cx="160" cy="160" r="138" fill="none" stroke="#3a3228" stroke-width="1.5"/>
