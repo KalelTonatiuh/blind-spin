@@ -383,7 +383,7 @@
   .cov {
     position: relative; z-index: 1;
     width: 200px; height: 200px; flex-shrink: 0;
-    background: #080604; overflow: hidden;
+    background: #080604; overflow: visible;
     display: flex; align-items: center; justify-content: center;
     /* Slot: thick cardboard-style border + deep inset shadow */
     outline: 2px solid #080604;
@@ -413,7 +413,7 @@
     width: 22px; height: 22px; pointer-events: none;
     background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.45) 50%);
   }
-  .cov img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cov img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 10px; line-height: 1.6; }
 
   .cmeta { position: relative; z-index: 1; flex: 1; min-width: 0; padding-bottom: 4px; }
@@ -437,6 +437,9 @@
     background: linear-gradient(160deg, #d4b06a 0%, #a87830 25%, #c8a050 50%, #8a6020 75%, #c0983a 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+    /* Prevent very long titles from overflowing the card */
+    max-height: 4.4rem; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
   }
   .cpills { display: flex; flex-wrap: wrap; gap: 5px; }
   .pill { font-size: 0.54rem; padding: 3px 9px; border: 1px solid rgba(255,200,80,0.12); color: rgba(200,180,130,0.5); letter-spacing: 0.06em; border-radius: 2px; background: rgba(0,0,0,0.2); }
