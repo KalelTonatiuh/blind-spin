@@ -97,28 +97,50 @@
   .spin-btn.ld .sp { display: block; }
   @keyframes rot { to { transform: rotate(360deg); } }
 
-  /* ── CONSOLE — looks like an old rack-mounted VU meter unit ── */
+  /* ── CONSOLE — hardware rack unit with bezel ── */
   .con {
     display: flex; flex-direction: column; overflow: hidden;
-    background: linear-gradient(to bottom, #080808 0%, #050505 100%);
-    border-left: 3px solid #1a1a14;
-    box-shadow: inset 2px 0 8px rgba(0,0,0,0.6);
     position: relative;
+    /* Outer bezel — thick dark metal frame */
+    background: linear-gradient(to bottom, #101010 0%, #080808 100%);
+    border-left: 1px solid #2a2a20;
+    box-shadow:
+      inset 3px 0 0 #0a0a08,
+      inset 6px 0 12px rgba(0,0,0,0.5),
+      inset -1px 0 0 #1a1a12;
   }
-  /* Brushed metal panel texture */
+  /* Brushed aluminium panel — fine horizontal lines */
   .con::before {
     content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    background-image: repeating-linear-gradient(
-      0deg, transparent 0, transparent 1px,
-      rgba(255,255,255,0.012) 1px, rgba(255,255,255,0.012) 2px
-    );
+    background-image:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 1px,
+        rgba(255,255,255,0.018) 1px, rgba(255,255,255,0.018) 2px
+      ),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 3px,
+        rgba(255,255,255,0.004) 3px, rgba(255,255,255,0.004) 4px
+      );
+  }
+  /* Inset screen bezel around the log area */
+  .con::after {
+    content: ''; position: absolute;
+    top: 34px; left: 6px; right: 6px; bottom: 6px;
+    pointer-events: none; z-index: 0;
+    border: 2px solid #0a0a08;
+    border-radius: 2px;
+    box-shadow:
+      inset 0 0 0 1px #1e1e18,
+      inset 0 2px 8px rgba(0,0,0,0.8),
+      0 0 0 1px #242420;
   }
   .con-hdr {
     flex-shrink: 0; display: flex; align-items: center; gap: 7px;
-    padding: 9px 12px; position: relative; z-index: 1;
-    background: linear-gradient(to bottom, #141410 0%, #0c0c08 100%);
-    border-bottom: 1px solid #1e1e18;
-    box-shadow: 0 1px 0 rgba(255,255,200,0.03);
+    padding: 8px 12px; position: relative; z-index: 1;
+    /* Top faceplate strip — slightly lighter brushed metal */
+    background: linear-gradient(to bottom, #1c1c16 0%, #121210 100%);
+    border-bottom: 2px solid #080808;
+    box-shadow: 0 1px 0 rgba(255,255,200,0.04), inset 0 1px 0 rgba(255,255,255,0.03);
   }
   .cdot {
     width: 7px; height: 7px; border-radius: 50%;
@@ -134,14 +156,18 @@
     background: radial-gradient(circle at 35% 35%, #ee7a7a, #8a3a3a);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 0 6px rgba(160,74,74,0.6), 0 0 0 1px #6a2a2a;
   }
-  .con-title { font-size: 0.54rem; letter-spacing: 0.22em; text-transform: uppercase; color: #2a2a22; flex: 1; }
+  .con-title { font-size: 0.5rem; letter-spacing: 0.26em; text-transform: uppercase; color: #3a3a2e; flex: 1; text-shadow: 0 1px 0 rgba(0,0,0,0.8); }
   .con-clr {
-    font-size: 0.5rem; color: #2a2a20; background: none; cursor: pointer;
-    font-family: inherit; letter-spacing: 0.1em; text-transform: uppercase;
-    border: 1px solid #1e1e16; padding: 2px 6px; border-radius: 2px;
-    transition: color 0.1s, border-color 0.1s;
+    font-size: 0.46rem; color: #303028; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px;
+    background: linear-gradient(to bottom, #1a1a14, #101010);
+    border: 1px solid #2a2a20; border-bottom: 2px solid #060606;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    transition: all 0.1s;
   }
   .con-clr:hover { color: #6a5a30; border-color: #3a3020; }
+  .con-clr:active { transform: translateY(1px); box-shadow: none; }
   #log {
     flex: 1; overflow-y: auto; padding: 7px 11px 10px; font-size: 0.6rem; line-height: 1.7;
     scrollbar-width: thin; scrollbar-color: #1a1a14 transparent;
@@ -154,8 +180,8 @@
   .ll.info .lm { color: #2a4a7a; }
   .ll.warn .lm { color: #7a6020; }
   .ll.err  .lm { color: #7a2a2a; }
-  .ll.dim  .lm { color: #1a1a14; }
-  .ll.raw  .lm { color: #101810; font-size: 0.52rem; }
+  .ll.dim  .lm { color: #1e1e18; }
+  .ll.raw  .lm { color: #141c10; font-size: 0.52rem; }
 
   /* ── EMPTY ── */
   .empty { padding-top: 24px; }
@@ -467,25 +493,41 @@
   /* Tab-style buttons — look like physical record divider tabs */
   .filter-btn {
     flex-shrink: 0; position: relative; cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em;
-    text-transform: uppercase; padding: 7px 14px;
-    color: #7a6a40;
-    background: linear-gradient(to bottom, #1e1a10 0%, #161208 100%);
-    border: 1px solid #3a3020;
-    border-bottom: 2px solid #0a0804;
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,200,80,0.04);
-    transition: all 0.1s;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 7px 15px;
+    color: #6a5e38;
+    /* Worn rubber key — dark matte surface, rounded, physically thick */
+    background: linear-gradient(160deg, #2a2418 0%, #1e1a0e 40%, #161208 100%);
+    border: 1px solid #3a3220;
+    border-radius: 4px;
+    box-shadow:
+      0 4px 0 #0a0804,
+      0 5px 8px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,200,80,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all 0.08s ease;
+    /* Subtle rubber texture */
+    background-image:
+      radial-gradient(circle at 30% 30%, rgba(255,200,80,0.03) 0%, transparent 60%),
+      linear-gradient(160deg, #2a2418 0%, #1e1a0e 40%, #161208 100%);
   }
   .filter-btn:hover {
-    color: #c8a040; border-color: #5a4820;
-    background: linear-gradient(to bottom, #242018 0%, #1a1610 100%);
+    color: #a88840;
+    background-image:
+      radial-gradient(circle at 30% 30%, rgba(255,200,80,0.06) 0%, transparent 60%),
+      linear-gradient(160deg, #322c1e 0%, #26200e 40%, #1e1808 100%);
+    box-shadow: 0 4px 0 #0a0804, 0 5px 10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,200,80,0.08);
   }
-  .filter-btn.on {
-    color: #c8a040; border-color: #7a5820;
-    background: linear-gradient(to bottom, #141008 0%, #1a1610 100%);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 0 rgba(0,0,0,0.2);
-    transform: translateY(1px);
+  .filter-btn:active, .filter-btn.on {
+    color: #c8a040; transform: translateY(3px);
+    background-image:
+      radial-gradient(circle at 30% 30%, rgba(255,200,80,0.04) 0%, transparent 60%),
+      linear-gradient(160deg, #1a1408 0%, #161008 100%);
+    box-shadow:
+      0 1px 0 #0a0804,
+      0 2px 4px rgba(0,0,0,0.5),
+      inset 0 2px 5px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(0,0,0,0.2);
   }
 
   .sim-btn {
@@ -893,9 +935,31 @@
     gap: 0; position: relative; overflow: hidden;
     background: radial-gradient(ellipse at 50% 38%, #1e1608 0%, #0c0a06 65%);
   }
+  /* Surface the vinyl sits on */
+  .empty::before {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 45%;
+    background: linear-gradient(to top,
+      rgba(10,8,4,0.9) 0%,
+      rgba(20,14,6,0.4) 40%,
+      transparent 100%);
+    pointer-events: none;
+  }
+  /* Elliptical cast shadow under vinyl */
+  .empty::after {
+    content: ''; position: absolute;
+    bottom: calc(50% - 158px);
+    left: 50%; transform: translateX(-50%);
+    width: 200px; height: 24px;
+    background: radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.7) 0%, transparent 70%);
+    filter: blur(6px);
+    pointer-events: none;
+  }
   .empty-crate {
     width: 260px; height: 260px; position: relative; margin-bottom: 28px;
     flex-shrink: 0;
+    /* Vinyl casts a shadow down onto the surface */
+    filter: drop-shadow(0 20px 18px rgba(0,0,0,0.6));
   }
   .empty-crate::before { display: none; }
   .empty-crate::after  { display: none; }
