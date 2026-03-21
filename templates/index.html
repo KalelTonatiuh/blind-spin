@@ -192,9 +192,22 @@
   .cov {
     position: relative; z-index: 1;
     width: 200px; height: 200px; flex-shrink: 0;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
     background: var(--surface); overflow: hidden;
     display: flex; align-items: center; justify-content: center;
+    /* Inset sleeve slot — deep shadow inside, raised outer edge */
+    box-shadow:
+      0 8px 40px rgba(0,0,0,0.8),
+      0 0 0 2px #0a0806,
+      0 0 0 3px #3a2c14,
+      inset 0 2px 8px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(0,0,0,0.4);
+    border-radius: 1px;
+  }
+  /* Worn corner dog-ears on cover */
+  .cov::before {
+    content: ''; position: absolute; bottom: 0; right: 0; z-index: 2;
+    width: 18px; height: 18px; pointer-events: none;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.35) 50%);
   }
   .cov img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cnone { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; padding: 10px; line-height: 1.6; }
@@ -257,8 +270,24 @@
 
   .sec { margin-bottom: 20px; }
   .sec:last-child { margin-bottom: 0; }
-  .slbl { font-size: 0.5rem; letter-spacing: 0.22em; text-transform: uppercase; color: #5a4a28; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; position: relative; z-index: 1; text-shadow: 0 1px 0 rgba(0,0,0,0.8); }
-  .slbl::after { content: ''; flex: 1; height: 1px; background: #2a2010; }
+  .slbl {
+    font-size: 0.48rem; letter-spacing: 0.24em; text-transform: uppercase;
+    color: #e8d8a0; margin-bottom: 10px; display: inline-flex; align-items: center;
+    position: relative; z-index: 1;
+    /* Label tape — cream strip with embossed text feel */
+    background: linear-gradient(to bottom, #d8c880, #c0a860);
+    color: #2a1e08;
+    padding: 2px 8px 3px;
+    border-radius: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,200,0.4), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 1px 0 rgba(255,255,200,0.3);
+  }
+  /* Tape edge extending right */
+  .slbl::after {
+    content: ''; display: inline-block; width: 40px; height: 100%;
+    background: linear-gradient(to right, #b09050, transparent);
+    margin-left: 0; border-radius: 0 1px 1px 0;
+  }
 
   .grow, .drow { display: flex; flex-wrap: wrap; gap: 5px; }
   .gt {
@@ -286,6 +315,12 @@
   }
   .gt:nth-child(odd)  { transform: rotate(-0.4deg); }
   .gt:nth-child(even) { transform: rotate(0.3deg); }
+  /* Dog-ear corner on tags */
+  .gt::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 6px; height: 6px;
+    background: linear-gradient(225deg, rgba(0,0,0,0.3) 50%, transparent 50%);
+  }
   .gt.p {
     background:
       repeating-linear-gradient(
@@ -313,15 +348,22 @@
 
   .tlist {
     border: 1px solid #2a2010;
-    border-left: 3px solid #6a3020; /* red margin line like ruled paper */
+    border-left: 4px solid #6a3020;
     background: linear-gradient(to bottom, #0e0c06, #0c0a04);
     position: relative; z-index: 1;
     box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
   }
   .tr {
     display: flex; gap: 8px; align-items: baseline;
-    padding: 5px 10px; border-bottom: 1px solid rgba(180,140,60,0.07);
-    font-size: 0.62rem;
+    padding: 5px 10px 5px 28px; border-bottom: 1px solid rgba(180,140,60,0.07);
+    font-size: 0.62rem; position: relative;
+  }
+  /* Hole-punch circles on left margin */
+  .tr::before {
+    content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #080604;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8), 0 0 0 1px #1a1408;
   }
   .tr:last-child { border-bottom: none; }
   .tr:hover { background: rgba(180,140,60,0.03); }
@@ -492,10 +534,19 @@
   /* ── RECORD STORE OVERLAY ── */
   .store-overlay {
     display: none; position: fixed; inset: 0; z-index: 1000;
-    background: #1a1208;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    flex-direction: column;
+    overflow-y: auto; overscroll-behavior: contain; flex-direction: column;
+    /* Dark damask wallpaper — repeating diamond/floral pattern */
+    background-color: #110c06;
+    background-image:
+      radial-gradient(ellipse 18px 24px at 50% 0%, rgba(80,50,15,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 18px 24px at 50% 100%, rgba(80,50,15,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 24px 18px at 0% 50%, rgba(80,50,15,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 24px 18px at 100% 50%, rgba(80,50,15,0.18) 0%, transparent 70%),
+      radial-gradient(circle 6px at 50% 50%, rgba(100,65,20,0.12) 0%, transparent 100%),
+      radial-gradient(circle 2px at 25% 25%, rgba(120,80,25,0.1) 0%, transparent 100%),
+      radial-gradient(circle 2px at 75% 75%, rgba(120,80,25,0.1) 0%, transparent 100%),
+      linear-gradient(to bottom, #130e07, #0e0a05);
+    background-size: 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, 48px 48px, auto;
   }
   .store-overlay.open { display: flex; }
 
@@ -532,9 +583,13 @@
     background:
       repeating-linear-gradient(0deg,
         transparent 0, transparent 40px,
-        rgba(0,0,0,0.06) 40px, rgba(0,0,0,0.06) 41px
+        rgba(0,0,0,0.08) 40px, rgba(0,0,0,0.08) 41px
       ),
-      linear-gradient(to bottom, #120e08, #0e0a06);
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 96px,
+        rgba(80,50,15,0.04) 96px, rgba(80,50,15,0.04) 97px
+      ),
+      linear-gradient(to bottom, #130e08, #0d0904);
   }
 
   .shelf-label {
@@ -2082,7 +2137,7 @@ function makeSleeve(r) {
       pop.id = 'store-popover';
       document.body.appendChild(pop);
       // Close on outside click
-      document.addEventListener('click', () => pop.classList.remove('vis'));
+      document.addEventListener('click', (ev) => { if (!ev.target.closest('#store-popover') && !ev.target.closest('.sleeve')) pop.classList.remove('vis'); });
       pop.addEventListener('click', e => e.stopPropagation());
     }
     // Toggle off if same sleeve clicked again
