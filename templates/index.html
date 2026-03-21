@@ -2580,7 +2580,7 @@ async function loadDecadeShelf(decade, range) {
     const mapping = GENRE_MAP[genre] || { genre };
     await Promise.allSettled(Array(5).fill(0).map(async () => {
       try {
-        const params = new URLSearchParams({ ...mapping, yearFrom: range.from, yearTo: range.to });
+        const params = new URLSearchParams({ ...mapping, year_from: range.from, year_to: range.to });
         const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
         if (data.artist && data.title) results.push(data);
       } catch {}
@@ -2608,7 +2608,7 @@ async function refreshDecadeShelf(genre, decade) {
   const results = [];
   await Promise.allSettled(Array(5).fill(0).map(async () => {
     try {
-      const params = new URLSearchParams({ ...mapping, yearFrom: range.from, yearTo: range.to });
+      const params = new URLSearchParams({ ...mapping, year_from: range.from, year_to: range.to });
       const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
       if (data.artist && data.title) results.push(data);
     } catch {}
