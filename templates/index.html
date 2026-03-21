@@ -2768,15 +2768,13 @@ const SHELF_GENRE_MAP = {
 
 async function fetchShelfResults(genre) {
   const mapping = SHELF_GENRE_MAP[genre] || { genre };
-  const results = [];
-  await Promise.allSettled(Array(5).fill(0).map(async () => {
-    try {
-      const params = new URLSearchParams(mapping);
-      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-      if (data.artist && data.title) results.push(data);
-    } catch {}
-  }));
-  return results;
+  try {
+    const params = new URLSearchParams({ ...mapping, count: 5 });
+    const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
+    if (Array.isArray(data)) return data.filter(r => r.artist && r.title);
+    if (data.artist && data.title) return [data];
+  } catch {}
+  return [];
 }
 
 async function refreshShelf(genre) {

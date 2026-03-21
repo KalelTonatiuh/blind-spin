@@ -223,39 +223,56 @@ def discogs_random():
     if not results:
         return jsonify({"error": "no results"}), 404
 
+    # count param — store shelves request multiple results in one API call
+    count = request.args.get("count", 1, type=int)
+    count = min(count, 10)  # cap at 10
+
+    def parse_item(item):
+        raw_title = item.get("title", "")
+        if " - " in raw_title:
+            artist, title = raw_title.split(" - ", 1)
+        else:
+            artist = ""
+            title  = raw_title
+        genres = item.get("genre", [])
+        styles = item.get("style", [])
+        tags   = list(dict.fromkeys(genres + styles))[:10]
+        cover  = item.get("cover_image") or item.get("thumb") or ""
+        url_   = f"https://www.discogs.com{item['uri']}" if item.get("uri") else ""
+        fmt    = (item.get("format") or [""])[0] if item.get("format") else ""
+        return {
+            "source": "discogs",
+            "artist": artist.strip(),
+            "title":  title.strip(),
+            "url":    url_,
+            "cover":  cover,
+            "tags":   tags,
+            "year":   str(item.get("year", "")),
+            "type":   fmt or "album",
+            "genre":  genres[0] if genres else "",
+            "label":  (item.get("label") or [""])[0],
+            "country": item.get("country", ""),
+            "catno":  item.get("catno", ""),
+            "release_id": item.get("id", ""),
+        }
+
+    if count > 1:
+        # Return up to count unique results, shuffled
+        random.shuffle(results)
+        parsed = []
+        seen = set()
+        for item in results:
+            r = parse_item(item)
+            key = r["artist"] + r["title"]
+            if key not in seen and r["artist"] and r["title"]:
+                seen.add(key)
+                parsed.append(r)
+            if len(parsed) >= count:
+                break
+        return jsonify(parsed)
+
     item = random.choice(results)
-
-    # Parse artist/title — Discogs title field is usually "Artist - Title"
-    raw_title = item.get("title", "")
-    if " - " in raw_title:
-        artist, title = raw_title.split(" - ", 1)
-    else:
-        artist = ""
-        title  = raw_title
-
-    year   = str(item.get("year", ""))
-    genres = item.get("genre", [])
-    styles = item.get("style", [])
-    tags   = list(dict.fromkeys(genres + styles))[:10]  # dedupe, genres first
-    cover  = item.get("cover_image") or item.get("thumb") or ""
-    url_   = f"https://www.discogs.com{item['uri']}" if item.get("uri") else ""
-    fmt    = (item.get("format") or [""])[0] if item.get("format") else ""
-
-    return jsonify({
-        "source": "discogs",
-        "artist": artist.strip(),
-        "title":  title.strip(),
-        "url":    url_,
-        "cover":  cover,
-        "tags":   tags,
-        "year":   year,
-        "type":   fmt or "album",
-        "genre":  genres[0] if genres else "",
-        "label":  (item.get("label") or [""])[0],
-        "country": item.get("country", ""),
-        "catno":  item.get("catno", ""),
-        "release_id": item.get("id", ""),
-    })
+    return jsonify(parse_item(item))
 
 # ── Discogs release detail (tracklist, notes) ─────────────────────────────────
 
