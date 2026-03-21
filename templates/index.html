@@ -277,6 +277,93 @@
     transform: translateY(3px) !important;
   }
 
+  /* ── TURNTABLE ARM ── */
+  .turntable-wrap {
+    position: absolute; top: -8px; right: -8px;
+    width: 90px; height: 90px;
+    pointer-events: none; z-index: 4;
+    overflow: visible;
+  }
+  .turntable-arm {
+    position: absolute; top: 0; right: 0;
+    width: 90px; height: 90px;
+    transform-origin: 78px 8px;   /* pivot = headshell mounting point */
+    transform: rotate(-38deg);    /* resting position — arm lifted off */
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .turntable-arm.playing {
+    transform: rotate(0deg);      /* dropped onto the groove */
+  }
+  @keyframes arm-idle-wobble {
+    0%, 100% { transform: rotate(0deg); }
+    50%       { transform: rotate(0.4deg); }
+  }
+  .turntable-arm.playing {
+    animation: arm-idle-wobble 4s ease-in-out infinite;
+    animation-delay: 1.2s;       /* starts after the drop completes */
+  }
+
+  /* ── FAV NOTES ── */
+  .fav-note-wrap {
+    display: none; margin-top: 10px; position: relative; z-index: 1;
+  }
+  .fav-note-wrap.vis { display: block; }
+  .fav-note {
+    width: 100%; min-height: 52px; resize: vertical;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.04em; line-height: 1.7;
+    color: #3a2c10;
+    /* Index card ruled lines */
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 22px,
+        rgba(180,100,80,0.18) 22px, rgba(180,100,80,0.18) 23px
+      ),
+      linear-gradient(to bottom, #f5efd8, #ede5c4);
+    border: 1px solid #8a7040;
+    border-bottom: 2px solid #5a4820;
+    border-radius: 1px;
+    padding: 6px 10px 6px 36px;
+    outline: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.12), 0 1px 0 rgba(255,220,120,0.1);
+    transition: border-color 0.1s;
+    /* Red margin line — classic index card */
+    border-left: 3px solid #c85040;
+  }
+  .fav-note:focus {
+    border-color: #c8a040;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.12), 0 0 0 2px rgba(200,160,64,0.15);
+  }
+  .fav-note::placeholder { color: #a89060; font-style: italic; }
+  .fav-note-lbl {
+    font-size: 0.46rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: #6a3020; margin-bottom: 4px; display: block;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── CRACKLE TOGGLE ── */
+  .crackle-btn {
+    flex-shrink: 0; cursor: pointer; position: relative;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 10px;
+    color: #3a3020;
+    background: linear-gradient(160deg, #1e1a0e 0%, #161208 100%);
+    border: 1px solid #2e2818; border-radius: 3px;
+    box-shadow: 0 2px 0 #0a0804, 0 3px 5px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,200,80,0.04);
+    transition: all 0.08s ease;
+    margin-left: auto;
+  }
+  .crackle-btn:hover { color: #7a6030; }
+  .crackle-btn.on {
+    color: #c8a040;
+    background: linear-gradient(160deg, #161008 0%, #100e06 100%);
+    box-shadow: 0 0 0 #0a0804, 0 1px 3px rgba(0,0,0,0.4),
+      inset 0 1px 3px rgba(0,0,0,0.3);
+    transform: translateY(2px);
+  }
+
   /* Blurred cover wash fills the top section */
   .cbg {
     position: relative; overflow: hidden;
@@ -707,131 +794,6 @@
   .store-status { font-size: 0.54rem; color: #6a5030; letter-spacing: 0.1em; }
 
   .store-body { padding: 0 0 40px; }
-
-  /* ── DECADE CRATE DIVIDERS ── */
-  .decade-bar {
-    position: sticky; top: 53px; z-index: 9;
-    display: flex; align-items: flex-end; gap: 4px;
-    padding: 0 24px 0;
-    flex-shrink: 0;
-    background:
-      repeating-linear-gradient(90deg,
-        transparent 0, transparent 8px,
-        rgba(0,0,0,0.06) 8px, rgba(0,0,0,0.06) 9px
-      ),
-      linear-gradient(to bottom, #1a1208, #0e0904);
-    border-bottom: 3px solid #0a0804;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.05);
-    overflow-x: auto;
-    /* Must not clip the tabs' upward protrusion — padding-top gives room */
-    overflow-y: visible;
-    padding-top: 8px;
-    scrollbar-width: none;
-  }
-  .decade-bar::-webkit-scrollbar { display: none; }
-
-  /* Individual crate divider tab */
-  .decade-tab {
-    flex-shrink: 0; cursor: pointer; position: relative;
-    width: 52px; padding: 16px 0 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'IBM Plex Mono', monospace; font-size: 0.64rem;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: #7a5c30;
-    /* Aged cardboard divider — warm cream with grain */
-    background:
-      repeating-linear-gradient(0deg,
-        transparent 0, transparent 14px,
-        rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 15px
-      ),
-      repeating-linear-gradient(90deg,
-        transparent 0, transparent 8px,
-        rgba(255,200,80,0.03) 8px, rgba(255,200,80,0.03) 9px
-      ),
-      linear-gradient(to bottom, #d4c080 0%, #c0a860 40%, #b09448 100%);
-    border: 1px solid #8a7040;
-    border-bottom: none;
-    border-radius: 3px 3px 0 0;
-    box-shadow:
-      2px 0 0 rgba(0,0,0,0.2),
-      inset 0 1px 0 rgba(255,255,200,0.35),
-      inset 1px 0 0 rgba(255,255,200,0.1);
-    text-shadow: 0 1px 0 rgba(255,255,200,0.4);
-    transition: background 0.1s, color 0.1s, transform 0.1s;
-    /* Slight random tilt — hand-inserted divider feel */
-    transform-origin: bottom center;
-  }
-  .decade-tab:nth-child(odd)  { transform: rotate(-0.4deg); }
-  .decade-tab:nth-child(even) { transform: rotate(0.3deg);  }
-  /* Worn top-right dog-ear */
-  .decade-tab::after {
-    content: ''; position: absolute; top: 0; right: 0;
-    width: 9px; height: 9px;
-    background: linear-gradient(225deg, rgba(0,0,0,0.22) 50%, transparent 50%);
-  }
-  /* Stencilled label mark at top */
-  .decade-tab::before {
-    content: ''; position: absolute; top: 5px; left: 50%;
-    transform: translateX(-50%);
-    width: 28px; height: 2px;
-    background: rgba(60,40,10,0.2);
-    border-radius: 1px;
-  }
-  .decade-tab:hover {
-    color: #3a2810;
-    background:
-      repeating-linear-gradient(0deg,
-        transparent 0, transparent 14px,
-        rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 15px
-      ),
-      linear-gradient(to bottom, #e8d890 0%, #d4b868 40%, #c4a850 100%);
-    transform: translateY(-3px) rotate(0deg) !important;
-  }
-  .decade-tab.active {
-    color: #1a0e04;
-    background:
-      repeating-linear-gradient(0deg,
-        transparent 0, transparent 14px,
-        rgba(0,0,0,0.07) 14px, rgba(0,0,0,0.07) 15px
-      ),
-      linear-gradient(to bottom, #f0e098 0%, #dcc070 40%, #c8a848 100%);
-    transform: translateY(-5px) rotate(0deg) !important;
-    box-shadow:
-      2px 0 0 rgba(0,0,0,0.15),
-      inset 0 1px 0 rgba(255,255,220,0.5),
-      0 -2px 8px rgba(200,160,40,0.2);
-    z-index: 2;
-  }
-
-  /* "All" tab — slightly different, acts as reset */
-  .decade-tab.all-tab {
-    width: 38px; font-size: 0.56rem;
-    background:
-      linear-gradient(to bottom, #b0a070 0%, #9a8858 40%, #8a7848 100%);
-    color: #e8dfc0;
-    border-color: #6a5830;
-  }
-  .decade-tab.all-tab:hover, .decade-tab.all-tab.active {
-    background: linear-gradient(to bottom, #c0b080 0%, #a89860 100%);
-    color: #f8f0d8;
-  }
-
-  /* Decade section within store body */
-  .decade-section { display: none; }
-  .decade-section.vis { display: block; }
-  .decade-section-hdr {
-    display: flex; align-items: center; gap: 16px;
-    padding: 24px 28px 0;
-  }
-  .decade-section-title {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 1.6rem; color: #c8a96e;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-  }
-  .decade-section-rule {
-    flex: 1; height: 1px;
-    background: linear-gradient(to right, rgba(180,140,60,0.3), transparent);
-  }
 
   /* Shelf row */
   .shelf-row {
@@ -1300,6 +1262,7 @@
     <button class="spin-btn" id="btn" onclick="spin()">
       <span class="sp"></span><span>Spin</span>
     </button>
+    <button class="crackle-btn on" id="cracklebtn" onclick="toggleCrackle()" title="Needle-drop crackle">◎</button>
   </div>
 
   <div class="fbar" id="fbar">
@@ -1558,8 +1521,35 @@
                 <circle cx="160" cy="160" r="138" fill="none" stroke="#3a3228" stroke-width="1.5"/>
               </svg>
             </div>
+            <!-- Turntable arm — drops onto groove when card loads -->
+            <div class="turntable-wrap">
+              <svg class="turntable-arm" id="turntable-arm" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="arm-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4a3c20"/>
+                    <stop offset="40%" stop-color="#8a7040"/>
+                    <stop offset="100%" stop-color="#3a2c14"/>
+                  </linearGradient>
+                  <radialGradient id="pivot-grad" cx="35%" cy="35%" r="60%">
+                    <stop offset="0%" stop-color="#6a5830"/>
+                    <stop offset="100%" stop-color="#2a1e0c"/>
+                  </radialGradient>
+                </defs>
+                <!-- Arm shadow -->
+                <line x1="79" y1="9" x2="19" y2="75" stroke="rgba(0,0,0,0.35)" stroke-width="4" stroke-linecap="round"/>
+                <!-- Main arm shaft -->
+                <line x1="78" y1="8" x2="20" y2="72" stroke="url(#arm-grad)" stroke-width="3" stroke-linecap="round"/>
+                <!-- Headshell -->
+                <line x1="20" y1="72" x2="12" y2="80" stroke="#5a4820" stroke-width="4" stroke-linecap="round"/>
+                <!-- Stylus tip -->
+                <circle cx="11" cy="81" r="2.5" fill="#c8a040"/>
+                <circle cx="11" cy="81" r="1.2" fill="#ffe080"/>
+                <!-- Pivot cap -->
+                <circle cx="78" cy="8" r="5" fill="url(#pivot-grad)" stroke="#1a1208" stroke-width="1"/>
+                <circle cx="78" cy="8" r="2" fill="#0a0804"/>
+              </svg>
+            </div>
           </div>
-          <div class="cmeta">
             <div class="csrc" id="csrc"></div>
             <div class="cart" id="cart"></div>
             <div class="ctit" id="ctit"></div>
@@ -1583,6 +1573,10 @@
           <button class="reveal-btn" id="revealbtn" onclick="revealCard()">↳ Reveal</button>
           <div class="lrow" id="lrow"></div>
           <button class="fav-btn" id="favbtn" onclick="toggleFav()"><span id="favstar">☆</span> Add to Favorites</button>
+          <div class="fav-note-wrap" id="fav-note-wrap">
+            <span class="fav-note-lbl">note</span>
+            <textarea class="fav-note" id="fav-note" placeholder="jot something down…" rows="2" oninput="saveFavNote()"></textarea>
+          </div>
           <button class="sim-btn" id="simbtn" onclick="spinSimilar()">Similar ↻</button>
           <div class="note" id="note" style="display:none"></div>
         </div>
@@ -1620,27 +1614,7 @@
       <button class="store-close" onclick="toggleStore()">✕ Close</button>
     </div>
     <div class="store-scroll" id="store-scroll">
-    <!-- Decade crate dividers -->
-    <div class="decade-bar" id="decade-bar">
-      <div class="decade-tab all-tab active" data-decade="all" onclick="selectDecade(this,'all')">All</div>
-      <div class="decade-tab" data-decade="20s" onclick="selectDecade(this,'20s')">20s</div>
-      <div class="decade-tab" data-decade="10s" onclick="selectDecade(this,'10s')">10s</div>
-      <div class="decade-tab" data-decade="00s" onclick="selectDecade(this,'00s')">00s</div>
-      <div class="decade-tab" data-decade="90s" onclick="selectDecade(this,'90s')">90s</div>
-      <div class="decade-tab" data-decade="80s" onclick="selectDecade(this,'80s')">80s</div>
-      <div class="decade-tab" data-decade="70s" onclick="selectDecade(this,'70s')">70s</div>
-      <div class="decade-tab" data-decade="60s" onclick="selectDecade(this,'60s')">60s</div>
-      <div class="decade-tab" data-decade="50s" onclick="selectDecade(this,'50s')">50s</div>
-    </div>
-    <div class="store-body" id="store-body"></div>
-    <!-- Decade section — rendered on demand below genre shelves -->
-    <div class="decade-section" id="decade-section">
-      <div class="decade-section-hdr">
-        <div class="decade-section-title" id="decade-section-title"></div>
-        <div class="decade-section-rule"></div>
-      </div>
-      <div id="decade-shelves"></div>
-    </div>
+      <div class="store-body" id="store-body"></div>
     </div>
   </div>
 </div>
@@ -1673,6 +1647,71 @@ document.addEventListener('keydown', e => {
 });
 
 // ── NOTE: constants defined below in mbViaProxy section ─────────────────────────────────────────────────────────────────────
+
+// ── FAV NOTES ────────────────────────────────────────────────────────────────
+let favNotes = JSON.parse(localStorage.getItem('bs_fav_notes') || '{}');
+
+function favId(r) {
+  return r ? (r.url || r.mbid || (r.artist + r.title)) : null;
+}
+
+function saveFavNote() {
+  if (!lastResult) return;
+  const id = favId(lastResult);
+  const val = document.getElementById('fav-note').value;
+  if (val.trim()) {
+    favNotes[id] = val;
+  } else {
+    delete favNotes[id];
+  }
+  localStorage.setItem('bs_fav_notes', JSON.stringify(favNotes));
+}
+
+function loadFavNote(r) {
+  const id = favId(r);
+  const isFav = favorites.some(f => favId(f) === id);
+  const wrap = document.getElementById('fav-note-wrap');
+  const ta   = document.getElementById('fav-note');
+  if (isFav) {
+    wrap.classList.add('vis');
+    ta.value = favNotes[id] || '';
+  } else {
+    wrap.classList.remove('vis');
+    ta.value = '';
+  }
+}
+
+// ── CRACKLE ───────────────────────────────────────────────────────────────────
+let crackleOn = true;
+
+// Tiny vinyl crackle — generated via Web Audio API, no external file needed
+function playCrackle() {
+  if (!crackleOn) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.9, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    // White noise that decays exponentially — simulates needle drop + brief crackle
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      const env = Math.exp(-t * 6) * (t < 0.04 ? t / 0.04 : 1); // attack + decay
+      data[i] = (Math.random() * 2 - 1) * env * 0.35;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    // High-pass to cut low rumble, keeping the crisp crackle frequencies
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.value = 800;
+    src.connect(hp); hp.connect(ctx.destination);
+    src.start();
+    src.onended = () => ctx.close();
+  } catch(e) {}
+}
+
+function toggleCrackle() {
+  crackleOn = !crackleOn;
+  document.getElementById('cracklebtn').classList.toggle('on', crackleOn);
+}
 
 // ── BLIND MODE ────────────────────────────────────────────────────────────────
 let blindMode = false;
@@ -1724,6 +1763,7 @@ async function spin() {
   hideCard(); clrLog();
 
   log('spin started', 'info');
+  playCrackle();
   const f = getFilters();
   if (Object.values(f).some(v => v)) log(`filters: ${JSON.stringify(f)}`, 'dim');
 
@@ -2086,6 +2126,11 @@ function render(r) {
   } else {
     document.getElementById('card').classList.remove('blind');
   }
+  // Drop turntable arm after card animates in
+  setTimeout(() => {
+    const arm = document.getElementById('turntable-arm');
+    if (arm) arm.classList.add('playing');
+  }, 350);
   log('rendered.', 'ok');
 
   // Fire info fetches async — don't block render
@@ -2296,10 +2341,13 @@ function toggleFav() {
     favorites.splice(idx, 1);
     btn.innerHTML = '<span>☆</span> Add to Favorites';
     btn.classList.remove('active');
+    document.getElementById('fav-note-wrap').classList.remove('vis');
+    document.getElementById('fav-note').value = '';
   } else {
     favorites.unshift({ ...lastResult, _ts: Date.now() });
     btn.innerHTML = '<span>★</span> Favorited';
     btn.classList.add('active');
+    loadFavNote(lastResult);
   }
   localStorage.setItem('bs_favs', JSON.stringify(favorites));
   if (trayOpen && trayTab === 'favs') renderTray();
@@ -2312,6 +2360,7 @@ function updateFavBtn() {
   const btn = document.getElementById('favbtn');
   btn.innerHTML = isFav ? '<span>★</span> Favorited' : '<span>☆</span> Add to Favorites';
   btn.classList.toggle('active', isFav);
+  loadFavNote(r);
 }
 
 function toggleTray() {
@@ -2360,10 +2409,10 @@ function openTrayItem(i) {
 
 function exportFavs() {
   if (!favorites.length) return;
-  const rows = [['Artist','Title','Year','Genre','Country','Source','URL']];
+  const rows = [['Artist','Title','Year','Genre','Country','Source','URL','Note']];
   favorites.forEach(r => rows.push([
     r.artist||'', r.title||'', r.year||'', r.genre||'',
-    r.country||'', r.source||'', r.url||''
+    r.country||'', r.source||'', r.url||'', favNotes[favId(r)]||''
   ]));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
@@ -2496,124 +2545,7 @@ async function loadStore() {
   status.textContent = 'loaded';
 }
 
-// ── DECADE BROWSER ────────────────────────────────────────────────────────────
-const DECADE_RANGES = {
-  '20s': { from: 2020, to: 2029, label: '2020s' },
-  '10s': { from: 2010, to: 2019, label: '2010s' },
-  '00s': { from: 2000, to: 2009, label: '2000s' },
-  '90s': { from: 1990, to: 1999, label: '1990s' },
-  '80s': { from: 1980, to: 1989, label: '1980s' },
-  '70s': { from: 1970, to: 1979, label: '1970s' },
-  '60s': { from: 1960, to: 1969, label: '1960s' },
-  '50s': { from: 1950, to: 1959, label: '1950s' },
-};
-const decadeLoaded = {};
-
-function selectDecade(tabEl, decade) {
-  // Update active tab
-  document.querySelectorAll('.decade-tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-
-  const storeBody  = document.getElementById('store-body');
-  const decadeSec  = document.getElementById('decade-section');
-
-  if (decade === 'all') {
-    // Show genre shelves, hide decade section
-    storeBody.style.display = '';
-    decadeSec.classList.remove('vis');
-    return;
-  }
-
-  // Hide genre shelves, show decade section
-  storeBody.style.display = 'none';
-  decadeSec.classList.add('vis');
-
-  const range = DECADE_RANGES[decade];
-  document.getElementById('decade-section-title').textContent = range.label;
-
-  if (!decadeLoaded[decade]) {
-    decadeLoaded[decade] = true;
-    loadDecadeShelf(decade, range);
-  }
-}
-
-async function loadDecadeShelf(decade, range) {
-  const container = document.getElementById('decade-shelves');
-
-  // Build one shelf per store genre for this decade
-  container.innerHTML = '';
-  const DECADE_GENRES = ['Rock', 'Electronic', 'Jazz', 'Hip Hop', 'Classical', 'Folk, World, & Country', 'Funk / Soul', 'Blues', 'Reggae', 'Pop'];
-
-  DECADE_GENRES.forEach(genre => {
-    const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
-    const row = document.createElement('div');
-    row.className = 'shelf-row';
-    row.innerHTML = `
-      <div class="shelf-label-row">
-        <span class="shelf-label">${genre}</span>
-        <button class="shelf-refresh" onclick="refreshDecadeShelf('${genre}','${decade}')" title="Refresh">↻</button>
-      </div>
-      <div class="shelf-surface">
-        <div class="shelf-records" id="records-${key}">
-          ${Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('')}
-        </div>
-      </div>`;
-    container.appendChild(row);
-  });
-
-  // Fetch all in parallel
-  const GENRE_MAP = {
-    'Folk, World, & Country': { genre: 'Folk, World, & Country' },
-    'Funk / Soul': { genre: 'Funk / Soul' },
-  };
-
-  // Fetch genres sequentially to avoid hammering Discogs rate limits
-  for (const genre of DECADE_GENRES) {
-    const results = [];
-    const mapping = GENRE_MAP[genre] || { genre };
-    await Promise.allSettled(Array(5).fill(0).map(async () => {
-      try {
-        const params = new URLSearchParams({ ...mapping, year_from: range.from, year_to: range.to });
-        const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-        if (data.artist && data.title) results.push(data);
-      } catch {}
-    }));
-    const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
-    const el = document.getElementById('records-' + key);
-    if (!el) continue;
-    el.innerHTML = '';
-    if (!results.length) {
-      el.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
-    } else {
-      results.forEach(r => el.appendChild(makeSleeve(r)));
-    }
-  }
-}
-
-async function refreshDecadeShelf(genre, decade) {
-  const range = DECADE_RANGES[decade];
-  const key = `${decade}_${genre.replace(/[^a-z]/gi,'_')}`;
-  const el = document.getElementById('records-' + key);
-  if (!el) return;
-  el.innerHTML = Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('');
-  const GENRE_MAP = { 'Folk, World, & Country': { genre: 'Folk, World, & Country' }, 'Funk / Soul': { genre: 'Funk / Soul' } };
-  const mapping = GENRE_MAP[genre] || { genre };
-  const results = [];
-  await Promise.allSettled(Array(5).fill(0).map(async () => {
-    try {
-      const params = new URLSearchParams({ ...mapping, year_from: range.from, year_to: range.to });
-      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-      if (data.artist && data.title) results.push(data);
-    } catch {}
-  }));
-  el.innerHTML = '';
-  if (!results.length) {
-    el.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
-  } else {
-    results.forEach(r => el.appendChild(makeSleeve(r)));
-  }
-}
-
+// ── SLEEVE / STORE ───────────────────────────────────────────────────────────
 function makeSleeve(r) {
   const div = document.createElement('div');
   div.className = 'sleeve';
@@ -2800,6 +2732,9 @@ function hideCard() {
   document.getElementById('empty').style.display='flex';
   document.getElementById('card').classList.remove('on');
   document.getElementById('simbtn').classList.remove('vis');
+  // Lift turntable arm
+  const arm = document.getElementById('turntable-arm');
+  if (arm) arm.classList.remove('playing');
 }
 </script>
 </body>
