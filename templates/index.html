@@ -2039,12 +2039,21 @@ function pickGroup(groups, f={}) {
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render(r) {
-  // Cover
+  // Cover — update only the img, preserve blind overlay and turntable arm children
   const covEl = document.getElementById('cov');
+  // Remove any previous cover img or no-art div, leave other children intact
+  covEl.querySelectorAll('img, .cnone').forEach(el => el.remove());
   if (r.cover) {
-    covEl.innerHTML = `<img src="${escA(r.cover)}" alt="cover" onerror="this.parentElement.innerHTML='<div class=\\'cnone\\'>no art</div>'">`;
+    const img = document.createElement('img');
+    img.src = escA(r.cover);
+    img.alt = 'cover';
+    img.onerror = function() { this.replaceWith(Object.assign(document.createElement('div'), {className:'cnone',textContent:'no art'})); };
+    covEl.insertBefore(img, covEl.firstChild);
   } else {
-    covEl.innerHTML = '<div class="cnone">no art</div>';
+    const none = document.createElement('div');
+    none.className = 'cnone';
+    none.textContent = 'no art';
+    covEl.insertBefore(none, covEl.firstChild);
   }
 
   const srcLabels = { discogs: 'discogs.com', mb: 'musicbrainz.org', archive: 'archive.org', lastfm: 'last.fm' };
