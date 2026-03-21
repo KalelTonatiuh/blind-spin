@@ -1420,18 +1420,20 @@ async function discogsViaProxy(f={}) {
     }
     log(`[dg] genre=${data.genre} label=${data.label||'?'}`, 'dim');
     return {
-      source:    'discogs',
-      artist:    data.artist,
-      title:     data.title,
-      url:       data.url,
-      cover:     data.cover || null,
-      tags:      data.tags  || [],
-      year:      data.year  || '',
-      type:      data.type  || 'album',
-      genre:     data.genre || '',
-      label:     data.label || '',
-      country:   data.country || '',
-      mbid:      null,
+      source:     'discogs',
+      artist:     data.artist,
+      title:      data.title,
+      url:        data.url,
+      cover:      data.cover || null,
+      tags:       data.tags  || [],
+      year:       data.year  || '',
+      type:       data.type  || 'album',
+      genre:      data.genre || '',
+      label:      data.label || '',
+      country:    data.country || '',
+      catno:      data.catno  || '',
+      release_id: data.release_id || '',
+      mbid:       null,
       secondaryTypes: [],
     };
   }
@@ -1716,12 +1718,14 @@ async function fetchInfo(r) {
     );
   }
 
-  // Label info for MB (already in response, no extra fetch needed)
-  if (r.source === 'mb' || r.source === 'archive') {
+  // Label/catno/country for non-discogs sources (already in response)
+  if (r.source !== 'discogs') {
     const inforow = document.getElementById('inforow');
     const items = [];
     if (r.label)   items.push(`<div class="info-item"><span class="info-lbl">Label</span><span class="info-val">${esc(r.label)}</span></div>`);
+    if (r.catno)   items.push(`<div class="info-item"><span class="info-lbl">Cat. no.</span><span class="info-val">${esc(r.catno)}</span></div>`);
     if (r.country) items.push(`<div class="info-item"><span class="info-lbl">Country</span><span class="info-val">${esc(r.country)}</span></div>`);
+    if (r.year)    items.push(`<div class="info-item"><span class="info-lbl">Year</span><span class="info-val">${esc(r.year)}</span></div>`);
     if (items.length) {
       inforow.innerHTML = items.join('');
       inforow.style.display = 'flex';
@@ -1986,7 +1990,7 @@ function toggleStore() {
   storeOpen = !storeOpen;
   overlay.classList.toggle('open', storeOpen);
   const sp = document.getElementById('store-popover');
-  if (sp) sp.classList.remove('vis');
+  if (sp) { sp.classList.remove('vis'); if (sp._shelf && sp._positionFn) sp._shelf.removeEventListener('scroll', sp._positionFn); }
   document.getElementById('storebtn').classList.toggle('on', storeOpen);
   const storeBody = document.getElementById('store-body');
   if (storeOpen && (!storeLoaded || !storeBody.children.length)) loadStore();
@@ -2113,15 +2117,30 @@ function makeSleeve(r) {
       toggleStore();
       openStoreRelease(r);
     });
-    // Position above sleeve using fixed coords
-    const rect = div.getBoundingClientRect();
-    const pw = 220, ph = 180;
-    let left = rect.left + rect.width / 2 - pw / 2;
-    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-    let top = rect.top - ph - 12;
-    if (top < 8) top = rect.bottom + 12;
-    pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
+    // Position above sleeve — update on scroll so it follows
+    function positionPop() {
+      if (!pop.classList.contains('vis')) return;
+      const rect = div.getBoundingClientRect();
+      // If sleeve has scrolled offscreen, close
+      if (rect.right < 0 || rect.left > window.innerWidth) {
+        pop.classList.remove('vis'); return;
+      }
+      const pw = 220, ph = 190;
+      let left = rect.left + rect.width / 2 - pw / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+      let top = rect.top - ph - 12;
+      if (top < 8) top = rect.bottom + 12;
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    }
+    pop._positionFn = positionPop;
+    // Attach scroll listener to the shelf surface
+    const shelf = div.closest('.shelf-surface');
+    if (shelf) {
+      shelf.addEventListener('scroll', positionPop, { passive: true });
+      pop._shelf = shelf;
+    }
+    positionPop();
     pop.classList.add('vis');
   });
 
