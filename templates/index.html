@@ -2102,33 +2102,36 @@ function makeSleeve(r) {
       toggleStore();
       openStoreRelease(r);
     });
-    // Position: above sleeve if room, else below
-    const rect = div.getBoundingClientRect();
-    const pw = 220, ph = 200;
-    let left = Math.round(rect.left + rect.width / 2 - pw / 2);
-    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-    let top = rect.top - ph - 10;
-    if (top < 8) top = rect.bottom + 10;
-    pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
-    pop.classList.add('vis');
-    // Reposition on shelf scroll
-    const shelf = div.closest('.shelf-surface');
-    if (shelf && !shelf._popListener) {
-      shelf._popListener = true;
-      shelf.addEventListener('scroll', () => {
-        const p = document.getElementById('store-popover');
-        if (!p || !p._sleeve || !p.classList.contains('vis')) return;
-        const r2 = p._sleeve.getBoundingClientRect();
-        if (r2.right < 0 || r2.left > window.innerWidth) { p.classList.remove('vis'); return; }
-        let l = Math.round(r2.left + r2.width / 2 - 110);
-        l = Math.max(8, Math.min(l, window.innerWidth - 228));
-        let t = r2.top - 210;
-        if (t < 8) t = r2.bottom + 10;
-        p.style.left = l + 'px';
-        p.style.top = t + 'px';
-      }, { passive: true });
+    // Position popover: centered horizontally on sleeve, above it
+    function placePopover() {
+      const rect2 = div.getBoundingClientRect();
+      if (rect2.right < 0 || rect2.left > window.innerWidth) {
+        pop.classList.remove('vis'); pop._sleeve = null; return;
+      }
+      const pw = 220, ph = pop.offsetHeight || 180;
+      let left = Math.round(rect2.left + rect2.width / 2 - pw / 2);
+      left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+      // Position above the sleeve top edge (rect2.top is top of the sleeve div)
+      let top = rect2.top - ph - 8;
+      if (top < 8) top = rect2.bottom + 8;
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
     }
+    pop.classList.add('vis');
+    placePopover();
+    // Update position on any scroll inside the store overlay
+    const overlay = document.getElementById('store-overlay');
+    if (overlay && !overlay._popScrollListener) {
+      overlay._popScrollListener = true;
+      overlay.addEventListener('scroll', () => {
+        const p = document.getElementById('store-popover');
+        if (p && p._sleeve && p.classList.contains('vis')) placePopover();
+      }, { passive: true });
+      // Also listen to each shelf surface scroll
+      overlay.addEventListener('scroll', placePopover, { passive: true, capture: true });
+    }
+    const shelf = div.closest('.shelf-surface');
+    if (shelf) shelf.addEventListener('scroll', placePopover, { passive: true });
   });
 
   sleeveObserver.observe(div);
