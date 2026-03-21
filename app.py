@@ -165,34 +165,33 @@ def discogs_random():
     f_country  = request.args.get("country", "")
     f_format   = request.args.get("format", "")
 
-    # Build year range query string for Discogs
+    # Build year range — Discogs 'year' param accepts a single year or YYYY-YYYY range
     year_q = ""
     if f_year_from and f_year_to:
         year_q = f"{f_year_from}-{f_year_to}"
     elif f_year_from:
-        year_q = f"{f_year_from}-2025"
+        year_q = f"{f_year_from}-2030"
     elif f_year_to:
         year_q = f"1900-{f_year_to}"
 
     has_filters = any([f_genre, f_style, year_q, f_country, f_format])
 
-    # Estimate a safe page ceiling based on filter specificity
-    # Decade+genre combos vary widely — use a conservative range to avoid empty pages
+    # Page ceiling by filter specificity
     if year_q and f_genre:
-        max_page = 50    # decade + genre: narrow
+        max_page = 50
     elif year_q:
-        max_page = 150   # decade only: moderate
+        max_page = 200
     elif f_genre or f_style:
-        max_page = 300   # genre only: broad
+        max_page = 300
     else:
-        max_page = 3000  # no filters: full catalogue
+        max_page = 3000
 
     page = random.randint(1, max_page)
 
     search_url = f"{DISCOGS_BASE}/database/search"
     params = {
         "type":     "release",
-        "per_page": 50,   # larger batch so we always have results to pick from
+        "per_page": 50,
         "page":     page,
     }
 
@@ -201,8 +200,8 @@ def discogs_random():
     if year_q:    params["year"]    = year_q
     if f_country: params["country"] = f_country
     if f_format:  params["format"]  = f_format
-    if not f_format:
-        params["format"] = "album"
+    # Do NOT apply a default format filter — it kills results for older decades
+    # where releases are tagged LP/Vinyl/12" rather than "album"
 
     try:
         r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
