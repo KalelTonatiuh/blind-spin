@@ -2565,11 +2565,13 @@ async function loadStore() {
   const status = document.getElementById('store-status');
   body.innerHTML = '';
 
-  // Build shelf skeletons immediately
+  // Build all shelf skeletons immediately — content loads lazily as they scroll into view
   STORE_GENRES.forEach(genre => {
     const row = document.createElement('div');
     row.className = 'shelf-row';
     row.id = `shelf-${genre.replace(/[^a-z]/gi,'_')}`;
+    row.dataset.genre = genre;
+    row.dataset.loaded = 'false';
     row.innerHTML = `
       <div class="shelf-label-row">
         <span class="shelf-label">${genre}</span>
@@ -2583,52 +2585,44 @@ async function loadStore() {
     body.appendChild(row);
   });
 
-  // Fetch genres sequentially to avoid hammering Discogs rate limits
-  let loaded = 0;
-  status.textContent = `loading ${STORE_GENRES.length} shelves...`;
+  status.textContent = 'scroll to load shelves';
 
-  const GENRE_MAP = {
-    'Metal': { genre: 'Rock', style: 'Metal' },
-    'Blues': { genre: 'Blues' },
-    'Reggae': { genre: 'Reggae' },
-    'Pop': { genre: 'Pop' },
-    'Funk / Soul': { genre: 'Funk / Soul' },
-    'Folk, World, & Country': { genre: 'Folk, World, & Country' },
-  };
+  // Lazy load — fetch a shelf only when it enters the viewport
+  let loadedCount = 0;
+  const observer = new IntersectionObserver(async (entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const row = entry.target;
+      if (row.dataset.loaded === 'true') continue;
+      row.dataset.loaded = 'true';
+      observer.unobserve(row);
 
-  for (const genre of STORE_GENRES) {
-    const results = [];
-    const mapping = GENRE_MAP[genre] || { genre };
-    await Promise.allSettled(Array(5).fill(0).map(async () => {
-      try {
-        const params = new URLSearchParams(mapping);
-        const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-        if (data.artist && data.title) results.push(data);
-      } catch {}
-    }));
-
-    const container = document.getElementById('records-' + genre.replace(/[^a-z]/gi,'_'));
-    if (!container) continue;
-    container.innerHTML = '';
-    if (!results.length) {
-      container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
-    } else {
-      results.forEach(r => container.appendChild(makeSleeve(r)));
+      const genre = row.dataset.genre;
+      const results = await fetchShelfResults(genre);
+      const container = document.getElementById('records-' + genre.replace(/[^a-z]/gi,'_'));
+      if (!container) continue;
+      container.innerHTML = '';
+      if (!results.length) {
+        container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
+      } else {
+        results.forEach(r => container.appendChild(makeSleeve(r)));
+        // Add load more button
+        const surface = container.closest('.shelf-surface');
+        if (surface && !surface.querySelector('.shelf-more-btn')) {
+          const moreBtn = document.createElement('button');
+          moreBtn.className = 'shelf-more-btn';
+          moreBtn.textContent = 'Load more →';
+          moreBtn.onclick = () => loadMoreShelf(genre, moreBtn);
+          surface.appendChild(moreBtn);
+        }
+      }
+      loadedCount++;
+      status.textContent = `${loadedCount} / ${STORE_GENRES.length} loaded`;
+      if (loadedCount === STORE_GENRES.length) status.textContent = 'loaded';
     }
-    // Add "load more" button after records container
-    const surface = container.closest('.shelf-surface');
-    if (surface && !surface.querySelector('.shelf-more-btn')) {
-      const moreBtn = document.createElement('button');
-      moreBtn.className = 'shelf-more-btn';
-      moreBtn.textContent = 'Load more →';
-      moreBtn.onclick = () => loadMoreShelf(genre, moreBtn);
-      surface.appendChild(moreBtn);
-    }
-    loaded++;
-    status.textContent = `${loaded} / ${STORE_GENRES.length} loaded`;
-  }
+  }, { root: document.getElementById('store-scroll'), rootMargin: '200px', threshold: 0 });
 
-  status.textContent = 'loaded';
+  document.querySelectorAll('#store-body .shelf-row').forEach(row => observer.observe(row));
 }
 
 // ── SLEEVE / STORE ───────────────────────────────────────────────────────────
@@ -2764,20 +2758,32 @@ const sleeveObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.3 });
 
 // ── SHELF REFRESH ────────────────────────────────────────────────────────────
+const SHELF_GENRE_MAP = {
+  'Metal': { genre: 'Rock', style: 'Metal' },
+  'Blues': { genre: 'Blues' }, 'Reggae': { genre: 'Reggae' },
+  'Pop': { genre: 'Pop' }, 'Funk / Soul': { genre: 'Funk / Soul' },
+  'Folk, World, & Country': { genre: 'Folk, World, & Country' },
+};
+
+async function fetchShelfResults(genre) {
+  const mapping = SHELF_GENRE_MAP[genre] || { genre };
+  const results = [];
+  await Promise.allSettled(Array(5).fill(0).map(async () => {
+    try {
+      const params = new URLSearchParams(mapping);
+      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
+      if (data.artist && data.title) results.push(data);
+    } catch {}
+  }));
+  return results;
+}
+
 async function refreshShelf(genre) {
   const key = genre.replace(/[^a-z]/gi,'_');
   const container = document.getElementById('records-' + key);
   if (!container) return;
   container.innerHTML = Array(5).fill('<div class="sleeve sleeve-loading"><div class="sleeve-inner"></div></div>').join('');
-  const results = [];
-  const promises = Array(5).fill(0).map(async () => {
-    try {
-      const params = new URLSearchParams({ genre });
-      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-      if (data.artist && data.title) results.push(data);
-    } catch {}
-  });
-  await Promise.allSettled(promises);
+  const results = await fetchShelfResults(genre);
   container.innerHTML = '';
   if (!results.length) {
     container.innerHTML = '<div style="color:#4a3018;font-size:0.55rem;padding:8px 0;font-family:monospace;">no results</div>';
@@ -2793,21 +2799,7 @@ async function loadMoreShelf(genre, btn) {
   const key = genre.replace(/[^a-z]/gi,'_');
   const container = document.getElementById('records-' + key);
   if (!container) { btn.disabled = false; btn.textContent = 'Load more →'; return; }
-  const GENRE_MAP = {
-    'Metal': { genre: 'Rock', style: 'Metal' },
-    'Blues': { genre: 'Blues' }, 'Reggae': { genre: 'Reggae' },
-    'Pop': { genre: 'Pop' }, 'Funk / Soul': { genre: 'Funk / Soul' },
-    'Folk, World, & Country': { genre: 'Folk, World, & Country' },
-  };
-  const mapping = GENRE_MAP[genre] || { genre };
-  const results = [];
-  await Promise.allSettled(Array(5).fill(0).map(async () => {
-    try {
-      const params = new URLSearchParams(mapping);
-      const data = await fetch('/api/discogs/random?' + params).then(r => r.json());
-      if (data.artist && data.title) results.push(data);
-    } catch {}
-  }));
+  const results = await fetchShelfResults(genre);
   results.forEach(r => container.appendChild(makeSleeve(r)));
   btn.disabled = false;
   btn.textContent = 'Load more →';
