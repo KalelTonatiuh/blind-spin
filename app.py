@@ -165,21 +165,27 @@ def discogs_random():
     f_country  = request.args.get("country", "")
     f_format   = request.args.get("format", "")
 
-    # Build year range — Discogs 'year' param accepts a single year or YYYY-YYYY range
+    # Discogs 'year' param only reliably matches a single year.
+    # For decade ranges, embed the years into the free-text q= param instead,
+    # which supports Lucene-style ranges: year:[1960 TO 1969]
     year_q = ""
+    year_q_param = ""   # goes into params["year"] for single-year exact match
     if f_year_from and f_year_to:
-        year_q = f"{f_year_from}-{f_year_to}"
+        if f_year_from == f_year_to:
+            year_q_param = f_year_from
+        else:
+            year_q = f"year:[{f_year_from} TO {f_year_to}]"
     elif f_year_from:
-        year_q = f"{f_year_from}-2030"
+        year_q = f"year:[{f_year_from} TO 2030]"
     elif f_year_to:
-        year_q = f"1900-{f_year_to}"
+        year_q = f"year:[1900 TO {f_year_to}]"
 
-    has_filters = any([f_genre, f_style, year_q, f_country, f_format])
+    has_filters = any([f_genre, f_style, f_year_from, f_year_to, f_country, f_format])
 
     # Page ceiling by filter specificity
-    if year_q and f_genre:
+    if (f_year_from or f_year_to) and f_genre:
         max_page = 50
-    elif year_q:
+    elif f_year_from or f_year_to:
         max_page = 200
     elif f_genre or f_style:
         max_page = 300
@@ -195,13 +201,12 @@ def discogs_random():
         "page":     page,
     }
 
-    if f_genre:   params["genre"]   = f_genre
-    if f_style:   params["style"]   = f_style
-    if year_q:    params["year"]    = year_q
-    if f_country: params["country"] = f_country
-    if f_format:  params["format"]  = f_format
-    # Do NOT apply a default format filter — it kills results for older decades
-    # where releases are tagged LP/Vinyl/12" rather than "album"
+    if f_genre:        params["genre"]   = f_genre
+    if f_style:        params["style"]   = f_style
+    if year_q_param:   params["year"]    = year_q_param
+    if year_q:         params["q"]       = year_q
+    if f_country:      params["country"] = f_country
+    if f_format:       params["format"]  = f_format
 
     try:
         r = session.get(search_url, headers=dg_headers, params=params, timeout=12, verify=False)
