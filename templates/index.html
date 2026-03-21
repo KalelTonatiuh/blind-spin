@@ -1694,8 +1694,8 @@ function playCrackle() {
     // White noise that decays exponentially — simulates needle drop + brief crackle
     for (let i = 0; i < data.length; i++) {
       const t = i / ctx.sampleRate;
-      const env = Math.exp(-t * 6) * (t < 0.04 ? t / 0.04 : 1); // attack + decay
-      data[i] = (Math.random() * 2 - 1) * env * 0.35;
+      const env = Math.exp(-t * 8) * (t < 0.02 ? t / 0.02 : 1);
+      data[i] = (Math.random() * 2 - 1) * env * 0.12;
     }
     const src = ctx.createBufferSource();
     src.buffer = buf;
@@ -2360,7 +2360,7 @@ function updateFavBtn() {
   const btn = document.getElementById('favbtn');
   btn.innerHTML = isFav ? '<span>★</span> Favorited' : '<span>☆</span> Add to Favorites';
   btn.classList.toggle('active', isFav);
-  loadFavNote(r);
+  loadFavNote(lastResult);
 }
 
 function toggleTray() {
